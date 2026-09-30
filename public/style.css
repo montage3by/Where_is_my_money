@@ -151,3 +151,5 @@ h1 { font-family: var(--serif); font-weight: 500; font-size: 26px; margin: 0; le
 .badge.soft { background: var(--accent-soft); color: var(--accent); }
 .tabs button:not([aria-selected="true"]):hover, .day:not([aria-pressed="true"]):hover { border-color: var(--muted); }
 .weight-form input { color-scheme: dark; }
+.menu { margin: 12px 0 4px; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); display: flex; flex-direction: column; gap: 2px; }
+.menu .kcal { color: var(--accent); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }

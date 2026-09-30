@@ -113,6 +113,11 @@ function counterHtml(date, t) {
   </div>`;
 }
 
+function mealHtml(day, idx) {
+  const m = plan.days[(day.getDay() + 6) % 7].meals[idx];
+  return m ? `<p class="menu"><span class="kcal">${esc(m.type)} · ~${m.kcal} ккал</span>${esc(m.dish)}</p>` : '';
+}
+
 function renderTodos() {
   const day = todoDay();
   const date = ymd(day);
@@ -127,7 +132,7 @@ function renderTodos() {
   $('#todo-list').innerHTML = tasks.map((t, i) => {
     const p = progress[i];
     const status = taskStatus(t, p.done, date);
-    const expandable = Boolean(t.subtasks || t.counter || t.details);
+    const expandable = Boolean(t.subtasks || t.counter || t.details || t.meal !== undefined);
     const open = expandable && expanded.has(t.id);
     const time = t.start && t.end ? `${t.start}–${t.end}` : t.start ? `в ${t.start}` : t.end ? `до ${t.end}` : '';
 
@@ -142,6 +147,7 @@ function renderTodos() {
     let body = '';
     if (open) {
       body = `<div class="todo-body">
+        ${t.meal !== undefined ? mealHtml(day, t.meal) : ''}
         ${t.details ? `<p class="details">${esc(t.details)}</p>` : ''}
         ${t.subtasks ? t.subtasks.map((st, si) => taskHtml({ id: `${taskKey(date, t)}:${si}`, title: st })).join('') : ''}
         ${t.counter ? counterHtml(date, t) : ''}
