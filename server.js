@@ -15,15 +15,18 @@ const validIds = new Set([
   ...plan.days.flatMap((d) => d.meals.map((m) => m.id)),
   ...plan.shopping.flatMap((c) => c.items.map((i) => i.id)),
 ]);
-// Дела дня: todo:<YYYY-MM-DD>:<taskId>[:<subtask>]
-const todoIds = new Set(plan.routine.flatMap((t) =>
+// Дела дня: todo:<YYYY-MM-DD>:<taskId>[:<subtask>], разовые — todo:once:<taskId>[:<subtask>]
+const checkableIds = (tasks) => new Set(tasks.flatMap((t) =>
   t.subtasks ? t.subtasks.map((_, i) => `${t.id}:${i}`) : t.counter ? [] : [t.id]));
+const dailyIds = checkableIds(plan.routine.filter((t) => !t.once));
+const onceIds = checkableIds(plan.routine.filter((t) => t.once));
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function isValidId(id) {
   if (validIds.has(id)) return true;
-  const m = /^todo:(\d{4}-\d{2}-\d{2}):(.+)$/.exec(String(id));
-  return Boolean(m && todoIds.has(m[2]));
+  const m = /^todo:(\d{4}-\d{2}-\d{2}|once):(.+)$/.exec(String(id));
+  if (!m) return false;
+  return m[1] === 'once' ? onceIds.has(m[2]) : dailyIds.has(m[2]);
 }
 
 function loadState() {

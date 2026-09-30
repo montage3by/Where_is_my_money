@@ -63,7 +63,21 @@ function taskHtml({ id, title, meta, right }) {
 }
 
 // ——— Дела ———
-const subIds = (date, t) => t.subtasks.map((_, i) => `todo:${date}:${t.id}:${i}`);
+// Разовые дела хранятся без даты: todo:once:<id>
+const taskKey = (date, t) => `todo:${t.once ? 'once' : date}:${t.id}`;
+const subIds = (date, t) => t.subtasks.map((_, i) => `${taskKey(date, t)}:${i}`);
+
+// Разовое дело видно каждый день, пока не сделано, а после — только в день выполнения
+function doneOn(date, t) {
+  const ids = t.subtasks ? subIds(date, t) : [taskKey(date, t)];
+  if (!ids.every(isDone)) return null;
+  return ymd(new Date(ids.map((id) => state.checks[id]).sort().pop()));
+}
+const visibleTasks = (date) => plan.routine.filter((t) => {
+  if (!t.once) return true;
+  const d = doneOn(date, t);
+  return !d || date <= d;
+});
 const count = (date, t) => state.counters[`${t.id}:${date}`] || 0;
 
 function taskProgress(date, t) {
@@ -72,7 +86,7 @@ function taskProgress(date, t) {
     const n = subIds(date, t).filter(isDone).length;
     return { done: n === t.subtasks.length, n, of: t.subtasks.length };
   }
-  return { done: isDone(`todo:${date}:${t.id}`) };
+  return { done: isDone(taskKey(date, t)) };
 }
 
 function taskStatus(t, done, date) {
@@ -106,29 +120,30 @@ function renderTodos() {
   const rel = { 0: 'сегодня', '-1': 'вчера', 1: 'завтра' }[todoOffset];
   $('#todo-date').textContent = label + (rel ? ` · ${rel}` : '');
 
-  const progress = plan.routine.map((t) => taskProgress(date, t));
-  $('#todo-progress').textContent = `Сделано ${progress.filter((p) => p.done).length} из ${plan.routine.length}`;
+  const tasks = visibleTasks(date);
+  const progress = tasks.map((t) => taskProgress(date, t));
+  $('#todo-progress').textContent = `Сделано ${progress.filter((p) => p.done).length} из ${tasks.length}`;
 
-  $('#todo-list').innerHTML = plan.routine.map((t, i) => {
+  $('#todo-list').innerHTML = tasks.map((t, i) => {
     const p = progress[i];
     const status = taskStatus(t, p.done, date);
     const expandable = Boolean(t.subtasks || t.counter || t.details);
     const open = expandable && expanded.has(t.id);
-    const time = t.start ? `${t.start}–${t.end}` : t.end ? `до ${t.end}` : '';
+    const time = t.start && t.end ? `${t.start}–${t.end}` : t.start ? `в ${t.start}` : t.end ? `до ${t.end}` : '';
 
     let check;
     if (t.counter) check = `<span class="ring${p.done ? ' full' : ''}" style="--p:${Math.min(1, p.n / p.of)}"></span>`;
     else if (t.subtasks) check = `<input type="checkbox" class="cb" data-group="${t.id}"${p.done ? ' checked' : ''} aria-label="Отметить всё">`;
-    else check = `<input type="checkbox" class="cb" data-id="todo:${date}:${t.id}"${p.done ? ' checked' : ''}>`;
+    else check = `<input type="checkbox" class="cb" data-id="${taskKey(date, t)}"${p.done ? ' checked' : ''}>`;
 
-    const badge = status === 'now' ? '<span class="badge">сейчас</span>' : '';
+    const badge = (status === 'now' ? '<span class="badge">сейчас</span>' : '') + (t.once ? '<span class="badge soft">разово</span>' : '');
     const countLabel = p.of ? `<span class="kcal">${p.n}/${p.of}</span>` : '';
 
     let body = '';
     if (open) {
       body = `<div class="todo-body">
         ${t.details ? `<p class="details">${esc(t.details)}</p>` : ''}
-        ${t.subtasks ? t.subtasks.map((st, si) => taskHtml({ id: `todo:${date}:${t.id}:${si}`, title: st })).join('') : ''}
+        ${t.subtasks ? t.subtasks.map((st, si) => taskHtml({ id: `${taskKey(date, t)}:${si}`, title: st })).join('') : ''}
         ${t.counter ? counterHtml(date, t) : ''}
       </div>`;
     }
