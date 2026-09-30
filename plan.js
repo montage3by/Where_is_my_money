@@ -181,4 +181,7 @@ const routine = [
 days.forEach((d) => d.meals.forEach((m, i) => (m.id = `meal:${d.id}:${i}`)));
 shopping.forEach((c, ci) => c.items.forEach((it, i) => (it.id = `shop:${ci}:${i}`)));
 
-module.exports = { days, shopping, summary, rules, routine };
+// Первый день трекера: раньше него листать нельзя, от него считается «день N»
+const start = '2026-10-01';
+
+module.exports = { days, shopping, summary, rules, routine, start };

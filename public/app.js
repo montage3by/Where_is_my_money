@@ -7,16 +7,29 @@ let state = { checks: {}, weights: [], counters: {} };
 const todayIdx = (new Date().getDay() + 6) % 7; // Пн = 0
 let selectedDay = todayIdx;
 let hideBought = false;
-let todoOffset = 0; // дней от сегодня
+let viewDate = null; // YYYY-MM-DD открытого дня во вкладке «Дела»
+let followDefault = true; // пользователь не листал — после полуночи переезжаем на новый день
 const expanded = new Set();
 
 const pad = (n) => String(n).padStart(2, '0');
 const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const hm = (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+function daysFromToday(date) {
+  const midnight = new Date();
+  midnight.setHours(0, 0, 0, 0);
+  return Math.round((new Date(date + 'T00:00') - midnight) / 86400000);
+}
 function todoDay() {
-  const d = new Date();
-  d.setDate(d.getDate() + todoOffset);
-  return d;
+  return new Date(viewDate + 'T00:00');
+}
+// Сегодня, а до старта трекера — его первый день
+function defaultDate() {
+  const today = ymd(new Date());
+  return today < plan.start ? plan.start : today;
+}
+function openDate(date) {
+  viewDate = date < plan.start ? plan.start : date;
+  followDefault = viewDate === defaultDate();
 }
 
 async function api(path, body) {
@@ -122,12 +135,14 @@ function renderTodos() {
   const day = todoDay();
   const date = ymd(day);
   const label = day.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
-  const rel = { 0: 'сегодня', '-1': 'вчера', 1: 'завтра' }[todoOffset];
+  const rel = { 0: 'сегодня', '-1': 'вчера', 1: 'завтра' }[daysFromToday(date)];
   $('#todo-date').textContent = label + (rel ? ` · ${rel}` : '');
+  $('[data-shift="-1"]').disabled = date <= plan.start;
 
   const tasks = visibleTasks(date);
   const progress = tasks.map((t) => taskProgress(date, t));
-  $('#todo-progress').textContent = `Сделано ${progress.filter((p) => p.done).length} из ${tasks.length}`;
+  const dayN = daysFromToday(date) - daysFromToday(plan.start) + 1;
+  $('#todo-progress').textContent = `День ${dayN} · сделано ${progress.filter((p) => p.done).length} из ${tasks.length}`;
 
   $('#todo-list').innerHTML = tasks.map((t, i) => {
     const p = progress[i];
@@ -181,7 +196,7 @@ function historyDates() {
   for (const key of Object.keys(state.counters)) dates.add(key.split(':')[1]);
   for (const id of Object.keys(state.checks)) if (id.startsWith('todo:once:')) dates.add(ymd(new Date(state.checks[id])));
   const today = ymd(new Date());
-  return [...dates].filter((d) => d <= today).sort().reverse();
+  return [...dates].filter((d) => d <= today && d >= plan.start).sort().reverse();
 }
 
 function renderHistory() {
@@ -334,16 +349,16 @@ document.addEventListener('click', async (e) => {
 
   const shift = e.target.closest('[data-shift]');
   if (shift) {
-    todoOffset += Number(shift.dataset.shift);
+    const d = todoDay();
+    d.setDate(d.getDate() + Number(shift.dataset.shift));
+    openDate(ymd(d));
     renderTodos();
     return renderHistory();
   }
 
   const go = e.target.closest('[data-goto]');
   if (go) {
-    const midnight = new Date();
-    midnight.setHours(0, 0, 0, 0);
-    todoOffset = Math.round((new Date(go.dataset.goto + 'T00:00') - midnight) / 86400000);
+    openDate(go.dataset.goto);
     render();
     return window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -397,6 +412,7 @@ $('#weight-form').addEventListener('submit', async (e) => {
 async function refresh() {
   try {
     state = await api('/api/state');
+    if (followDefault) viewDate = defaultDate();
     render();
   } catch {}
 }
@@ -420,6 +436,8 @@ async function refresh() {
   const { summary, rules } = plan;
   $('#summary').textContent = `Окно ${summary.window} · ~${summary.kcal} ккал · Б ${summary.macros.protein} / Ж ${summary.macros.fat} / У ${summary.macros.carbs}`;
   $('#rules').innerHTML = rules.map((r) => `<li>${esc(r)}</li>`).join('');
+  openDate(defaultDate());
+  selectedDay = (todoDay().getDay() + 6) % 7; // рацион — на тот же день недели
   // Сразу раскрыть дело, которое идёт сейчас
   const today = ymd(new Date());
   plan.routine.forEach((t) => taskStatus(t, taskProgress(today, t).done, today) === 'now' && expanded.add(t.id));

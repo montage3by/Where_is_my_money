@@ -161,3 +161,5 @@ h1 { font-family: var(--serif); font-weight: 500; font-size: 26px; margin: 0; le
 .hist-row .kcal { text-align: right; }
 .hist-row.active span:first-child { color: var(--accent); font-weight: 600; }
 .link-btn.muted { color: var(--muted); text-align: center; text-decoration: none; }
+.date-nav button:disabled { opacity: .3; cursor: default; }
+h1 { letter-spacing: 0.04em; }
