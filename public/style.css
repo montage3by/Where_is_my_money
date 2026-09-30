@@ -153,3 +153,11 @@ h1 { font-family: var(--serif); font-weight: 500; font-size: 26px; margin: 0; le
 .weight-form input { color-scheme: dark; }
 .menu { margin: 12px 0 4px; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); display: flex; flex-direction: column; gap: 2px; }
 .menu .kcal { color: var(--accent); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.history { padding: 4px 16px; }
+.hist-row { width: 100%; display: grid; grid-template-columns: 1fr 80px 44px; align-items: center; gap: 12px; padding: 12px 0;
+  background: none; border: 0; border-top: 1px solid var(--line); color: var(--text); font: inherit; font-size: 15px; text-align: left; cursor: pointer; }
+.hist-row:first-child { border-top: 0; }
+.hist-row .bar { margin: 0; }
+.hist-row .kcal { text-align: right; }
+.hist-row.active span:first-child { color: var(--accent); font-weight: 600; }
+.link-btn.muted { color: var(--muted); text-align: center; text-decoration: none; }

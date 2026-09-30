@@ -171,6 +171,38 @@ function renderTodos() {
   }).join('');
 }
 
+// Все даты, за которые что-то отмечено, — от новых к старым
+function historyDates() {
+  const dates = new Set();
+  for (const id of Object.keys(state.checks)) {
+    const m = /^todo:(\d{4}-\d{2}-\d{2}):/.exec(id);
+    if (m) dates.add(m[1]);
+  }
+  for (const key of Object.keys(state.counters)) dates.add(key.split(':')[1]);
+  for (const id of Object.keys(state.checks)) if (id.startsWith('todo:once:')) dates.add(ymd(new Date(state.checks[id])));
+  const today = ymd(new Date());
+  return [...dates].filter((d) => d <= today).sort().reverse();
+}
+
+function renderHistory() {
+  const dates = historyDates();
+  if (!dates.length) {
+    $('#todo-history').innerHTML = '<p class="empty">Пока пусто — отмеченные дни появятся здесь.</p>';
+    return;
+  }
+  const current = ymd(todoDay());
+  $('#todo-history').innerHTML = dates.map((date) => {
+    const tasks = visibleTasks(date);
+    const done = tasks.filter((t) => taskProgress(date, t).done).length;
+    const label = new Date(date + 'T00:00').toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'long' });
+    return `<button class="hist-row${date === current ? ' active' : ''}" data-goto="${date}">
+      <span>${label}</span>
+      <span class="bar"><span style="width:${(done / tasks.length) * 100}%"></span></span>
+      <span class="kcal">${done}/${tasks.length}</span>
+    </button>`;
+  }).join('');
+}
+
 async function setGroup(taskId, done) {
   const date = ymd(todoDay());
   const t = plan.routine.find((x) => x.id === taskId);
@@ -267,6 +299,7 @@ function renderWeights() {
 function render() {
   if (!plan) return;
   renderTodos();
+  renderHistory();
   renderMeals();
   renderShop();
   renderWeights();
@@ -302,7 +335,17 @@ document.addEventListener('click', async (e) => {
   const shift = e.target.closest('[data-shift]');
   if (shift) {
     todoOffset += Number(shift.dataset.shift);
-    return renderTodos();
+    renderTodos();
+    return renderHistory();
+  }
+
+  const go = e.target.closest('[data-goto]');
+  if (go) {
+    const midnight = new Date();
+    midnight.setHours(0, 0, 0, 0);
+    todoOffset = Math.round((new Date(go.dataset.goto + 'T00:00') - midnight) / 86400000);
+    render();
+    return window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   const cnt = e.target.closest('[data-count]');

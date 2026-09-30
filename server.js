@@ -96,6 +96,10 @@ function serveStatic(req, res) {
 async function handleApi(req, res, route) {
   if (req.method === 'GET' && route === '/api/plan') return send(res, 200, plan);
   if (req.method === 'GET' && route === '/api/state') return send(res, 200, state);
+  if (req.method === 'GET' && route === '/api/export') {
+    res.setHeader('Content-Disposition', `attachment; filename="tracker-${new Date().toISOString().slice(0, 10)}.json"`);
+    return send(res, 200, JSON.stringify(state, null, 2));
+  }
 
   if (req.method !== 'POST') return send(res, 405, { error: 'method not allowed' });
   let body;
