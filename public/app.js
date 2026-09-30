@@ -3,10 +3,21 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&
 const money = (n) => n.toFixed(2).replace(/\.00$/, '') + ' ₾';
 
 let plan;
-let state = { checks: {}, weights: [] };
+let state = { checks: {}, weights: [], counters: {} };
 const todayIdx = (new Date().getDay() + 6) % 7; // Пн = 0
 let selectedDay = todayIdx;
 let hideBought = false;
+let todoOffset = 0; // дней от сегодня
+const expanded = new Set();
+
+const pad = (n) => String(n).padStart(2, '0');
+const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const hm = (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+function todoDay() {
+  const d = new Date();
+  d.setDate(d.getDate() + todoOffset);
+  return d;
+}
 
 async function api(path, body) {
   const res = await fetch(path, body === undefined ? {} : {
@@ -49,6 +60,128 @@ function taskHtml({ id, title, meta, right }) {
     <div class="body">${meta ? `<div class="meta">${meta}</div>` : ''}<div class="title">${esc(title)}</div></div>
     ${right ? `<div class="right">${right}</div>` : ''}
   </label>`;
+}
+
+// ——— Дела ———
+const subIds = (date, t) => t.subtasks.map((_, i) => `todo:${date}:${t.id}:${i}`);
+const count = (date, t) => state.counters[`${t.id}:${date}`] || 0;
+
+function taskProgress(date, t) {
+  if (t.counter) return { done: count(date, t) >= t.counter.target, n: count(date, t), of: t.counter.target };
+  if (t.subtasks) {
+    const n = subIds(date, t).filter(isDone).length;
+    return { done: n === t.subtasks.length, n, of: t.subtasks.length };
+  }
+  return { done: isDone(`todo:${date}:${t.id}`) };
+}
+
+function taskStatus(t, done, date) {
+  if (done) return '';
+  const today = ymd(new Date());
+  if (date < today) return 'late';
+  if (date > today) return '';
+  const now = hm(new Date());
+  if (t.end && now >= t.end) return 'late';
+  if (t.start && now >= t.start && (!t.end || now < t.end)) return 'now';
+  return '';
+}
+
+function counterHtml(date, t) {
+  const n = count(date, t);
+  const { target, steps } = t.counter;
+  return `<div class="counter">
+    <div class="counter-top"><span class="big">${n}</span><span class="kcal">из ${target}</span></div>
+    <div class="bar"><span style="width:${Math.min(100, (n / target) * 100)}%"></span></div>
+    <div class="counter-btns">
+      <button data-count="${t.id}" data-step="-1">−1</button>
+      ${steps.map((st) => `<button data-count="${t.id}" data-step="${st}" class="plus">+${st}</button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderTodos() {
+  const day = todoDay();
+  const date = ymd(day);
+  const label = day.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+  const rel = { 0: 'сегодня', '-1': 'вчера', 1: 'завтра' }[todoOffset];
+  $('#todo-date').textContent = label + (rel ? ` · ${rel}` : '');
+
+  const progress = plan.routine.map((t) => taskProgress(date, t));
+  $('#todo-progress').textContent = `Сделано ${progress.filter((p) => p.done).length} из ${plan.routine.length}`;
+
+  $('#todo-list').innerHTML = plan.routine.map((t, i) => {
+    const p = progress[i];
+    const status = taskStatus(t, p.done, date);
+    const expandable = Boolean(t.subtasks || t.counter || t.details);
+    const open = expandable && expanded.has(t.id);
+    const time = t.start ? `${t.start}–${t.end}` : t.end ? `до ${t.end}` : '';
+
+    let check;
+    if (t.counter) check = `<span class="ring${p.done ? ' full' : ''}" style="--p:${Math.min(1, p.n / p.of)}"></span>`;
+    else if (t.subtasks) check = `<input type="checkbox" class="cb" data-group="${t.id}"${p.done ? ' checked' : ''} aria-label="Отметить всё">`;
+    else check = `<input type="checkbox" class="cb" data-id="todo:${date}:${t.id}"${p.done ? ' checked' : ''}>`;
+
+    const badge = status === 'now' ? '<span class="badge">сейчас</span>' : '';
+    const countLabel = p.of ? `<span class="kcal">${p.n}/${p.of}</span>` : '';
+
+    let body = '';
+    if (open) {
+      body = `<div class="todo-body">
+        ${t.details ? `<p class="details">${esc(t.details)}</p>` : ''}
+        ${t.subtasks ? t.subtasks.map((st, si) => taskHtml({ id: `todo:${date}:${t.id}:${si}`, title: st })).join('') : ''}
+        ${t.counter ? counterHtml(date, t) : ''}
+      </div>`;
+    }
+
+    return `<div class="todo card ${p.done ? 'done' : ''} ${status}">
+      <div class="todo-row">
+        ${check}
+        <button class="todo-main" ${expandable ? `data-expand="${t.id}" aria-expanded="${open}"` : 'tabindex="-1"'}>
+          <span class="body">
+            <span class="meta"><b>${time}</b>${badge}</span>
+            <span class="title">${esc(t.title)}</span>
+          </span>
+          ${countLabel}
+          ${expandable ? `<span class="chev">${open ? '▴' : '▾'}</span>` : ''}
+        </button>
+      </div>
+      ${body}
+    </div>`;
+  }).join('');
+}
+
+async function setGroup(taskId, done) {
+  const date = ymd(todoDay());
+  const t = plan.routine.find((x) => x.id === taskId);
+  const ids = subIds(date, t);
+  const prev = Object.fromEntries(ids.map((id) => [id, state.checks[id]]));
+  ids.forEach((id) => (done ? (state.checks[id] = state.checks[id] || new Date().toISOString()) : delete state.checks[id]));
+  render();
+  try {
+    state = await api('/api/check', { ids, done });
+  } catch (e) {
+    ids.forEach((id) => (prev[id] ? (state.checks[id] = prev[id]) : delete state.checks[id]));
+    toast('Не сохранилось: ' + e.message);
+  }
+  render();
+}
+
+let counterSeq = 0;
+async function bumpCounter(taskId, step) {
+  const date = ymd(todoDay());
+  const t = plan.routine.find((x) => x.id === taskId);
+  const key = `${taskId}:${date}`;
+  const value = Math.max(0, count(date, t) + step);
+  if (value) state.counters[key] = value;
+  else delete state.counters[key];
+  renderTodos();
+  const seq = ++counterSeq;
+  try {
+    await api('/api/counter', { id: taskId, date, value });
+  } catch (e) {
+    toast('Не сохранилось: ' + e.message);
+    if (seq === counterSeq) refresh();
+  }
 }
 
 function renderMeals() {
@@ -112,6 +245,7 @@ function renderWeights() {
 
 function render() {
   if (!plan) return;
+  renderTodos();
   renderMeals();
   renderShop();
   renderWeights();
@@ -124,7 +258,8 @@ function showTab(name) {
 }
 
 document.addEventListener('change', (e) => {
-  if (e.target.matches('.task input')) toggle(e.target.dataset.id, e.target.checked);
+  if (e.target.matches('input[data-id]')) toggle(e.target.dataset.id, e.target.checked);
+  if (e.target.matches('input[data-group]')) setGroup(e.target.dataset.group, e.target.checked);
   if (e.target.id === 'hide-bought') {
     hideBought = e.target.checked;
     try { localStorage.setItem('hideBought', hideBought ? '1' : ''); } catch {}
@@ -135,6 +270,22 @@ document.addEventListener('change', (e) => {
 document.addEventListener('click', async (e) => {
   const tab = e.target.closest('[data-tab]');
   if (tab) return showTab(tab.dataset.tab);
+
+  const exp = e.target.closest('[data-expand]');
+  if (exp) {
+    const id = exp.dataset.expand;
+    expanded.has(id) ? expanded.delete(id) : expanded.add(id);
+    return renderTodos();
+  }
+
+  const shift = e.target.closest('[data-shift]');
+  if (shift) {
+    todoOffset += Number(shift.dataset.shift);
+    return renderTodos();
+  }
+
+  const cnt = e.target.closest('[data-count]');
+  if (cnt) return bumpCounter(cnt.dataset.count, Number(cnt.dataset.step));
 
   const day = e.target.closest('[data-day]');
   if (day) {
@@ -188,7 +339,7 @@ async function refresh() {
 
 (async function init() {
   const d = new Date();
-  $('#weight-form').date.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  $('#weight-form').date.value = ymd(d);
   try {
     hideBought = localStorage.getItem('hideBought') === '1';
     $('#hide-bought').checked = hideBought;
@@ -205,9 +356,12 @@ async function refresh() {
   const { summary, rules } = plan;
   $('#summary').textContent = `Окно ${summary.window} · ~${summary.kcal} ккал · Б ${summary.macros.protein} / Ж ${summary.macros.fat} / У ${summary.macros.carbs}`;
   $('#rules').innerHTML = rules.map((r) => `<li>${esc(r)}</li>`).join('');
+  // Сразу раскрыть дело, которое идёт сейчас
+  const today = ymd(new Date());
+  plan.routine.forEach((t) => taskStatus(t, taskProgress(today, t).done, today) === 'now' && expanded.add(t.id));
   render();
 
   // Синхронизация, если отмечали с другого устройства
   document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && refresh());
-  setInterval(refresh, 30000);
+  setInterval(refresh, 30000); // заодно обновляет «сейчас» и просроченные
 })();

@@ -15,13 +15,23 @@ const validIds = new Set([
   ...plan.days.flatMap((d) => d.meals.map((m) => m.id)),
   ...plan.shopping.flatMap((c) => c.items.map((i) => i.id)),
 ]);
+// Дела дня: todo:<YYYY-MM-DD>:<taskId>[:<subtask>]
+const todoIds = new Set(plan.routine.flatMap((t) =>
+  t.subtasks ? t.subtasks.map((_, i) => `${t.id}:${i}`) : t.counter ? [] : [t.id]));
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function isValidId(id) {
+  if (validIds.has(id)) return true;
+  const m = /^todo:(\d{4}-\d{2}-\d{2}):(.+)$/.exec(String(id));
+  return Boolean(m && todoIds.has(m[2]));
+}
 
 function loadState() {
   try {
     const s = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-    return { checks: s.checks || {}, weights: s.weights || [] };
+    return { checks: s.checks || {}, weights: s.weights || [], counters: s.counters || {} };
   } catch {
-    return { checks: {}, weights: [] };
+    return { checks: {}, weights: [], counters: {} };
   }
 }
 
@@ -93,9 +103,20 @@ async function handleApi(req, res, route) {
   }
 
   if (route === '/api/check') {
-    if (!validIds.has(body.id)) return send(res, 400, { error: 'unknown id' });
-    if (body.done) state.checks[body.id] = new Date().toISOString();
-    else delete state.checks[body.id];
+    const ids = Array.isArray(body.ids) ? body.ids : [body.id];
+    if (!ids.length || !ids.every(isValidId)) return send(res, 400, { error: 'unknown id' });
+    const now = new Date().toISOString();
+    for (const id of ids) {
+      if (body.done) state.checks[id] = state.checks[id] || now;
+      else delete state.checks[id];
+    }
+  } else if (route === '/api/counter') {
+    const task = plan.routine.find((t) => t.id === body.id && t.counter);
+    const value = Math.round(Number(body.value));
+    if (!task || !DATE_RE.test(String(body.date)) || !(value >= 0 && value <= 10000)) return send(res, 400, { error: 'bad counter' });
+    const key = `${body.id}:${body.date}`;
+    if (value) state.counters[key] = value;
+    else delete state.counters[key];
   } else if (route === '/api/reset') {
     const prefix = body.scope === 'meals' ? 'meal:' : body.scope === 'shopping' ? 'shop:' : null;
     if (!prefix) return send(res, 400, { error: 'scope must be meals or shopping' });
@@ -103,7 +124,7 @@ async function handleApi(req, res, route) {
   } else if (route === '/api/weight') {
     const kg = Number(body.kg);
     const date = String(body.date || '');
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !(kg > 20 && kg < 400)) return send(res, 400, { error: 'bad weight' });
+    if (!DATE_RE.test(date) || !(kg > 20 && kg < 400)) return send(res, 400, { error: 'bad weight' });
     state.weights = state.weights.filter((w) => w.date !== date);
     state.weights.push({ date, kg: Math.round(kg * 10) / 10 });
     state.weights.sort((a, b) => a.date.localeCompare(b.date));

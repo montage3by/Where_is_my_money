@@ -141,8 +141,34 @@ const rules = [
   'Через 2 недели скорректировать если нужно',
 ];
 
+// Распорядок дня — одинаковый на каждый день. Отметки хранятся по дате,
+// так что каждый день начинается с чистого листа.
+// id менять нельзя (по нему хранятся отметки), остальное — можно.
+//   subtasks — раскрывающийся список с галочками
+//   counter  — счётчик с целью (например, отклики)
+//   details  — текст, который виден при раскрытии
+const routine = [
+  {
+    id: 'morning', start: '06:30', end: '08:00', title: 'Утро',
+    details: 'Всё закончить до 8:00 — в 8:00 начинается рабочий день.',
+    subtasks: ['Подъём в 6:30', 'Зарядка', 'Приготовить завтрак', 'Холодный душ', 'Завтрак'],
+  },
+  { id: 'work1', start: '08:00', end: '13:00', title: 'Работа' },
+  {
+    id: 'lunch', start: '13:00', end: '14:00', title: 'Обед',
+    details: 'Приготовить и съесть до 14:00.',
+    subtasks: ['Приготовить еду', 'Поесть'],
+  },
+  { id: 'work2', start: '14:00', end: '19:00', title: 'Работа' },
+  {
+    id: 'hh', end: '19:00', title: 'Отклики на HH',
+    details: 'Сделать 100 откликов до 19:00.',
+    counter: { target: 100, steps: [1, 5, 10] },
+  },
+];
+
 // Стабильные ID задач: meal:<day>:<index>, shop:<category>:<index>
 days.forEach((d) => d.meals.forEach((m, i) => (m.id = `meal:${d.id}:${i}`)));
 shopping.forEach((c, ci) => c.items.forEach((it, i) => (it.id = `shop:${ci}:${i}`)));
 
-module.exports = { days, shopping, summary, rules };
+module.exports = { days, shopping, summary, rules, routine };

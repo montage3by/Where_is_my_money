@@ -78,10 +78,10 @@ h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
   padding: 12px 0; border-top: 1px solid var(--line); cursor: pointer;
 }
 .task:first-of-type { border-top: 0; }
-.task input { appearance: none; flex: none; width: 24px; height: 24px; margin: 1px 0 0;
+.task input, .cb { appearance: none; flex: none; width: 24px; height: 24px; margin: 1px 0 0;
   border: 2px solid var(--muted); border-radius: 7px; cursor: pointer; display: grid; place-content: center; }
-.task input:checked { background: var(--accent); border-color: var(--accent); }
-.task input:checked::after { content: ""; width: 6px; height: 11px; border: solid #fff; border-width: 0 2.5px 2.5px 0; transform: translateY(-1px) rotate(45deg); }
+.task input:checked, .cb:checked { background: var(--accent); border-color: var(--accent); }
+.task input:checked::after, .cb:checked::after { content: ""; width: 6px; height: 11px; border: solid #fff; border-width: 0 2.5px 2.5px 0; transform: translateY(-1px) rotate(45deg); }
 .task .body { flex: 1; min-width: 0; }
 .task .meta { font-size: 13px; color: var(--muted); display: flex; gap: 8px; }
 .task .meta b { color: var(--text); font-weight: 600; }
@@ -117,3 +117,42 @@ h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
 
 .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 20px); transform: translateX(-50%);
   background: var(--warn); color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; max-width: calc(100% - 32px); }
+
+/* ——— Дела ——— */
+.date-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; text-align: center; }
+.date-nav #todo-date { font-weight: 600; font-size: 17px; }
+.date-nav #todo-date::first-letter { text-transform: uppercase; }
+.date-nav button { flex: none; width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--text); font-size: 22px; line-height: 1; cursor: pointer; }
+
+.todo { padding: 0 16px; }
+.todo-row { display: flex; align-items: center; gap: 12px; }
+.todo-row > .cb, .todo-row > .ring { margin: 0; }
+.todo-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 14px 0;
+  background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.todo-main[tabindex="-1"] { cursor: default; }
+.todo-main .body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.todo-main .meta { font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+.todo-main .meta b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.todo-main .title { font-size: 17px; font-weight: 550; }
+.chev { color: var(--muted); font-size: 13px; width: 14px; text-align: center; }
+.todo.done .todo-main .title { color: var(--muted); text-decoration: line-through; }
+.todo.now { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.todo.late .todo-main .meta b { color: var(--warn); }
+.badge { background: var(--accent); color: #fff; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; text-transform: uppercase; letter-spacing: .04em; }
+
+.todo-body { border-top: 1px solid var(--line); padding: 4px 0 8px 36px; }
+.details { color: var(--muted); font-size: 14px; margin: 10px 0 4px; }
+
+.ring { flex: none; width: 24px; height: 24px; border-radius: 50%;
+  background: conic-gradient(var(--accent) calc(var(--p) * 360deg), var(--line) 0); position: relative; }
+.ring::after { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: var(--card); }
+.ring.full::after { inset: 0; background: var(--accent); }
+
+.counter { padding: 10px 0 6px; }
+.counter-top { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.counter .big { font-size: 28px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.counter-btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+.counter-btns button { font: inherit; font-weight: 600; padding: 10px 0; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--text); cursor: pointer; font-variant-numeric: tabular-nums; }
+.counter-btns .plus { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+.counter-btns button:active { transform: scale(.96); }

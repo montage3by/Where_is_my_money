@@ -6,25 +6,35 @@
   <meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#161614" media="(prefers-color-scheme: dark)">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Рацион Батуми</title>
+  <title>Мой день</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥗</text></svg>">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="top">
-    <h1>Рацион · Батуми</h1>
+    <h1>Мой день · Батуми</h1>
     <p class="sub" id="summary"></p>
   </header>
 
   <nav class="tabs" role="tablist">
-    <button role="tab" data-tab="meals" aria-selected="true">Рацион</button>
+    <button role="tab" data-tab="todo" aria-selected="true">Дела</button>
+    <button role="tab" data-tab="meals">Рацион</button>
     <button role="tab" data-tab="shop">Покупки</button>
     <button role="tab" data-tab="weight">Вес</button>
     <button role="tab" data-tab="rules">Правила</button>
   </nav>
 
   <main>
-    <section id="tab-meals" class="panel">
+    <section id="tab-todo" class="panel">
+      <div class="date-nav">
+        <button data-shift="-1" aria-label="Предыдущий день">‹</button>
+        <div><div id="todo-date"></div><div class="kcal" id="todo-progress"></div></div>
+        <button data-shift="1" aria-label="Следующий день">›</button>
+      </div>
+      <div id="todo-list"></div>
+    </section>
+
+    <section id="tab-meals" class="panel" hidden>
       <div class="days" id="days"></div>
       <div class="card" id="day-card"></div>
       <button class="link-btn" data-reset="meals">Сбросить отметки рациона за неделю</button>
