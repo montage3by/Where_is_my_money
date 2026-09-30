@@ -22,19 +22,31 @@ const dailyIds = checkableIds(plan.routine.filter((t) => !t.once));
 const onceIds = checkableIds(plan.routine.filter((t) => t.once));
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+// Распорядок будет меняться: каждый день запоминает свой список дел,
+// чтобы прошлые дни в истории показывались так, как были.
+const TZ = process.env.TZ_NAME || 'Asia/Tbilisi';
+const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(new Date());
+const dailyRoutine = () => plan.routine.filter((t) => !t.once);
+
+function snapshotDay(date) {
+  // Сегодня и будущее — всегда по актуальному плану; прошлое не трогаем, если уже сохранено
+  if (!state.snapshots[date] || date >= today()) state.snapshots[date] = dailyRoutine();
+}
+
 function isValidId(id) {
   if (validIds.has(id)) return true;
   const m = /^todo:(\d{4}-\d{2}-\d{2}|once):(.+)$/.exec(String(id));
   if (!m) return false;
-  return m[1] === 'once' ? onceIds.has(m[2]) : dailyIds.has(m[2]);
+  if (m[1] === 'once') return onceIds.has(m[2]);
+  return dailyIds.has(m[2]) || Boolean(state.snapshots[m[1]] && checkableIds(state.snapshots[m[1]]).has(m[2]));
 }
 
 function loadState() {
   try {
     const s = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-    return { checks: s.checks || {}, weights: s.weights || [], counters: s.counters || {} };
+    return { checks: s.checks || {}, weights: s.weights || [], counters: s.counters || {}, snapshots: s.snapshots || {} };
   } catch {
-    return { checks: {}, weights: [], counters: {} };
+    return { checks: {}, weights: [], counters: {}, snapshots: {} };
   }
 }
 
@@ -116,11 +128,16 @@ async function handleApi(req, res, route) {
     for (const id of ids) {
       if (body.done) state.checks[id] = state.checks[id] || now;
       else delete state.checks[id];
+      const m = /^todo:(\d{4}-\d{2}-\d{2}):/.exec(id);
+      if (m) snapshotDay(m[1]);
     }
   } else if (route === '/api/counter') {
-    const task = plan.routine.find((t) => t.id === body.id && t.counter);
+    const date = String(body.date);
+    const tasks = [...plan.routine, ...(state.snapshots[date] || [])];
+    const task = tasks.find((t) => t.id === body.id && t.counter);
     const value = Math.round(Number(body.value));
-    if (!task || !DATE_RE.test(String(body.date)) || !(value >= 0 && value <= 10000)) return send(res, 400, { error: 'bad counter' });
+    if (!task || !DATE_RE.test(date) || !(value >= 0 && value <= 10000)) return send(res, 400, { error: 'bad counter' });
+    snapshotDay(date);
     const key = `${body.id}:${body.date}`;
     if (value) state.counters[key] = value;
     else delete state.counters[key];

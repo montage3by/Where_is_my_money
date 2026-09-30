@@ -3,7 +3,7 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&
 const money = (n) => n.toFixed(2).replace(/\.00$/, '') + ' ₾';
 
 let plan;
-let state = { checks: {}, weights: [], counters: {} };
+let state = { checks: {}, weights: [], counters: {}, snapshots: {} };
 const todayIdx = (new Date().getDay() + 6) % 7; // Пн = 0
 let selectedDay = todayIdx;
 let hideBought = false;
@@ -86,7 +86,14 @@ function doneOn(date, t) {
   if (!ids.every(isDone)) return null;
   return ymd(new Date(ids.map((id) => state.checks[id]).sort().pop()));
 }
-const visibleTasks = (date) => plan.routine.filter((t) => {
+// Прошлые дни — по сохранённому на тот день списку, сегодня и дальше — по актуальному
+function tasksFor(date) {
+  const snap = state.snapshots && state.snapshots[date];
+  if (!snap || date >= ymd(new Date())) return plan.routine;
+  return [...snap, ...plan.routine.filter((t) => t.once)];
+}
+
+const visibleTasks = (date) => tasksFor(date).filter((t) => {
   if (!t.once) return true;
   const d = doneOn(date, t);
   return !d || date <= d;
@@ -220,7 +227,7 @@ function renderHistory() {
 
 async function setGroup(taskId, done) {
   const date = ymd(todoDay());
-  const t = plan.routine.find((x) => x.id === taskId);
+  const t = tasksFor(date).find((x) => x.id === taskId);
   const ids = subIds(date, t);
   const prev = Object.fromEntries(ids.map((id) => [id, state.checks[id]]));
   ids.forEach((id) => (done ? (state.checks[id] = state.checks[id] || new Date().toISOString()) : delete state.checks[id]));
@@ -237,7 +244,7 @@ async function setGroup(taskId, done) {
 let counterSeq = 0;
 async function bumpCounter(taskId, step) {
   const date = ymd(todoDay());
-  const t = plan.routine.find((x) => x.id === taskId);
+  const t = tasksFor(date).find((x) => x.id === taskId);
   const key = `${taskId}:${date}`;
   const value = Math.max(0, count(date, t) + step);
   if (value) state.counters[key] = value;
