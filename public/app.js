@@ -95,6 +95,7 @@ function tasksFor(date) {
 
 const visibleTasks = (date) => tasksFor(date).filter((t) => {
   if (!t.once) return true;
+  if (t.from && date < t.from) return false;
   const d = doneOn(date, t);
   return !d || date <= d;
 });
@@ -181,7 +182,7 @@ function renderTodos() {
         ${check}
         <button class="todo-main" ${expandable ? `data-expand="${t.id}" aria-expanded="${open}"` : 'tabindex="-1"'}>
           <span class="body">
-            <span class="meta"><b>${time}</b>${badge}</span>
+            ${time || badge ? `<span class="meta">${time ? `<b>${time}</b>` : ''}${badge}</span>` : ''}
             <span class="title">${esc(t.title)}</span>
           </span>
           ${countLabel}
