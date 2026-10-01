@@ -182,6 +182,10 @@ const routine = [
     subtasks: ['Снять деньги', 'Передать Алене ЗП'],
   },
   { id: 'raincoat', title: 'Купить дождевик или зонт', once: true, from: '2026-10-01' },
+  {
+    id: 'calls', title: 'Созвоны', once: true, from: '2026-10-01',
+    subtasks: ['Созвониться с мамой', 'Созвониться с Артуром', 'Созвониться с бабушкой'],
+  },
 ];
 
 // Стабильные ID задач: meal:<day>:<index>, shop:<category>:<index>
