@@ -42,12 +42,13 @@ async function api(path, body) {
   return res.json();
 }
 
-function toast(msg) {
+function toast(msg, kind = 'error') {
   const el = $('#toast');
   el.textContent = msg;
+  el.classList.toggle('ok', kind === 'ok');
   el.hidden = false;
   clearTimeout(toast.t);
-  toast.t = setTimeout(() => (el.hidden = true), 3000);
+  toast.t = setTimeout(() => (el.hidden = true), kind === 'ok' ? 6000 : 3000);
 }
 
 const isDone = (id) => Boolean(state.checks[id]);
@@ -215,7 +216,10 @@ function renderTodos() {
       </div>
       ${body}
     </div>`;
-  }).join('') + `<button class="add-btn" data-add>+ Добавить дело</button>`;
+  }).join('') + `<div class="add-row">
+      <button class="add-btn" data-add>+ Добавить дело</button>
+      <button class="add-btn voice" data-voice>🎤 Наговорить</button>
+    </div>`;
 }
 
 // ——— Редактор дел ———
@@ -253,6 +257,92 @@ function openEditor(task) {
   syncFormVisibility();
   dlg().showModal();
   if (!task) f.title.focus();
+}
+
+// ——— Голосовые дела: текст уходит Claude, он раскладывает его на дела ———
+const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+
+function voiceUi() {
+  const btn = $('#voice-mic');
+  btn.hidden = !SpeechRec;
+  btn.textContent = recognition ? '■ Остановить' : '🎤 Говорить';
+  btn.classList.toggle('recording', Boolean(recognition));
+}
+
+function voiceError(msg) {
+  const el = $('#voice-error');
+  el.textContent = msg;
+  el.hidden = !msg;
+}
+
+function openVoice() {
+  $('#voice-text').value = '';
+  voiceError('');
+  $('#voice-send').disabled = false;
+  $('#voice-send').textContent = 'Отправить';
+  voiceUi();
+  $('#voice-dialog').showModal();
+  if (SpeechRec) toggleMic();
+  else $('#voice-text').focus();
+}
+
+function toggleMic() {
+  if (recognition) return recognition.stop();
+  const ta = $('#voice-text');
+  const base = ta.value.trim() ? ta.value.trim() + ' ' : '';
+  recognition = new SpeechRec();
+  recognition.lang = 'ru-RU';
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.onresult = (e) => {
+    let said = '';
+    for (const r of e.results) said += r[0].transcript;
+    ta.value = base + said;
+  };
+  recognition.onerror = (e) => {
+    if (e.error === 'not-allowed') voiceError('Нет доступа к микрофону — разреши его в настройках браузера или надиктуй с клавиатуры');
+    else if (e.error !== 'no-speech' && e.error !== 'aborted') voiceError('Распознавание прервалось: ' + e.error);
+  };
+  recognition.onend = () => {
+    recognition = null;
+    voiceUi();
+  };
+  try {
+    recognition.start();
+  } catch {
+    recognition = null;
+  }
+  voiceUi();
+}
+
+function closeVoice() {
+  if (recognition) recognition.abort();
+  $('#voice-dialog').close();
+}
+
+async function sendVoice(e) {
+  e.preventDefault();
+  if (recognition) recognition.stop();
+  const text = $('#voice-text').value.trim();
+  if (!text) return voiceError('Скажи или напиши, какие дела добавить');
+  const btn = $('#voice-send');
+  btn.disabled = true;
+  btn.textContent = 'Claude разбирает…';
+  voiceError('');
+  try {
+    const res = await write('/api/ai/tasks', { text, date: viewDate });
+    const added = res.added.map((id) => routine().find((t) => t.id === id)).filter(Boolean);
+    closeVoice();
+    render();
+    const fmt = (d) => new Date(d + 'T00:00').toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' });
+    const where = (t) => (t.date && t.date !== viewDate ? ` (${fmt(t.date)})` : t.once ? ' (пока не сделаю)' : !t.date ? ' (каждый день)' : '');
+    toast('Добавлено: ' + added.map((t) => t.title + where(t)).join(', ') + (res.skipped.length ? `. Пропущено: ${res.skipped.join('; ')}` : ''), 'ok');
+  } catch (err) {
+    voiceError(err.message);
+    btn.disabled = false;
+    btn.textContent = 'Отправить';
+  }
 }
 
 function showFormError(msg) {
@@ -452,6 +542,9 @@ document.addEventListener('click', async (e) => {
   if (tab) return showTab(tab.dataset.tab);
 
   if (e.target.closest('[data-add]')) return openEditor(null);
+  if (e.target.closest('[data-voice]')) return openVoice();
+  if (e.target.closest('#voice-mic')) return toggleMic();
+  if (e.target.closest('[data-voice-close]')) return closeVoice();
   const ed = e.target.closest('[data-edit]');
   if (ed) return openEditor(routine().find((t) => t.id === ed.dataset.edit));
   if (e.target.closest('[data-close]')) return dlg().close();
@@ -515,6 +608,9 @@ document.addEventListener('click', async (e) => {
 });
 
 $('#task-form').addEventListener('submit', saveTask);
+$('#voice-form').addEventListener('submit', sendVoice);
+$('#voice-dialog').addEventListener('click', (e) => e.target === $('#voice-dialog') && closeVoice());
+$('#voice-dialog').addEventListener('cancel', () => recognition && recognition.abort());
 $('#task-form').addEventListener('change', (e) => e.target.matches('[name=kind],[name=when]') && syncFormVisibility());
 // Клик по затемнению вокруг окна закрывает его
 $('#task-dialog').addEventListener('click', (e) => e.target === dlg() && dlg().close());

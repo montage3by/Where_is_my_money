@@ -2,7 +2,9 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const Anthropic = require('@anthropic-ai/sdk');
 const plan = require('./plan');
+const ai = require('./ai');
 
 const PORT = Number(process.env.PORT) || 3000;
 // На Railway сюда монтируется Volume, иначе отметки сбрасываются при каждом деплое.
@@ -144,7 +146,7 @@ function serveStatic(req, res) {
 }
 
 async function handleApi(req, res, route) {
-  if (req.method === 'GET' && route === '/api/plan') return send(res, 200, { ...plan, routine: state.routine });
+  if (req.method === 'GET' && route === '/api/plan') return send(res, 200, { ...plan, routine: state.routine, ai: ai.enabled() });
   if (req.method === 'GET' && route === '/api/state') return send(res, 200, state);
   if (req.method === 'GET' && route === '/api/export') {
     res.setHeader('Content-Disposition', `attachment; filename="tracker-${new Date().toISOString().slice(0, 10)}.json"`);
@@ -190,10 +192,46 @@ async function handleApi(req, res, route) {
     }
     if (i >= 0) state.routine[i] = task;
     else state.routine.push(task);
+  } else if (route === '/api/ai/tasks') {
+    const text = String(body.text || '').trim().slice(0, 5000);
+    const selectedDate = DATE_RE.test(String(body.date)) ? String(body.date) : today();
+    if (!text) return send(res, 400, { error: 'Пустой текст' });
+    if (!ai.enabled()) return send(res, 503, { error: 'Голосовые дела не настроены: добавь ANTHROPIC_API_KEY в Variables на Railway' });
+    let drafts;
+    try {
+      drafts = await ai.parseTasks({ text, today: today(), selectedDate, existingTitles: state.routine.map((t) => t.title) });
+    } catch (e) {
+      console.error('ai:', e);
+      if (e instanceof Anthropic.AuthenticationError) return send(res, 502, { error: 'Ключ ANTHROPIC_API_KEY не подходит' });
+      if (e instanceof Anthropic.RateLimitError) return send(res, 502, { error: 'Слишком много запросов к Claude, попробуй через минуту' });
+      if (e instanceof Anthropic.APIError) return send(res, 502, { error: `Claude недоступен (${e.status ?? 'сеть'}), попробуй ещё раз` });
+      return send(res, 502, { error: e.message });
+    }
+    const added = [];
+    const skipped = [];
+    for (const d of drafts) {
+      try {
+        const task = cleanTask(d);
+        state.routine.push(task);
+        added.push(task);
+      } catch (e) {
+        skipped.push(`${d.title || 'без названия'}: ${e.message}`);
+      }
+    }
+    if (!added.length) return send(res, 422, { error: skipped.length ? `Не получилось: ${skipped.join('; ')}` : 'Не нашёл в тексте ни одного дела' });
+    saveState();
+    return send(res, 200, { ...state, added: added.map((t) => t.id), skipped });
   } else if (route === '/api/task/delete') {
     const before = state.routine.length;
     state.routine = state.routine.filter((t) => t.id !== body.id);
     if (state.routine.length === before) return send(res, 404, { error: 'Дело не найдено' });
+  } else if (route === '/api/import') {
+    // Восстановление из файла «Скачать все данные» — на случай потери данных при перезапуске без Volume
+    const ok = (v, t) => v && typeof v === 'object' && Array.isArray(v) === t;
+    if (!ok(body.checks, false) || !ok(body.counters, false) || !ok(body.weights, true) || !ok(body.routine, true)) {
+      return send(res, 400, { error: 'Это не файл выгрузки трекера' });
+    }
+    state = { checks: body.checks, counters: body.counters, weights: body.weights, snapshots: ok(body.snapshots, false) ? body.snapshots : {}, routine: body.routine };
   } else if (route === '/api/reset') {
     const prefix = body.scope === 'meals' ? 'meal:' : body.scope === 'shopping' ? 'shop:' : null;
     if (!prefix) return send(res, 400, { error: 'scope must be meals or shopping' });

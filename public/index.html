@@ -101,6 +101,20 @@
     </form>
   </dialog>
 
+  <dialog id="voice-dialog">
+    <form id="voice-form" novalidate>
+      <h2>Наговорить дела</h2>
+      <p class="hint-text">Скажи, что нужно сделать — Claude разложит на дела. Например: «завтра в восемь вечера сходить в зал, и пока не сделаю — оплатить офис, КУ и две кредитки».</p>
+      <textarea id="voice-text" rows="5" placeholder="Говори или пиши здесь. На iPhone можно надиктовать микрофоном на клавиатуре."></textarea>
+      <button type="button" id="voice-mic" class="mic-btn">🎤 Говорить</button>
+      <p class="form-error" id="voice-error" hidden></p>
+      <div class="dialog-actions">
+        <button type="button" data-voice-close>Отмена</button>
+        <button type="submit" class="primary" id="voice-send">Отправить</button>
+      </div>
+    </form>
+  </dialog>
+
   <div class="toast" id="toast" hidden></div>
   <script src="app.js"></script>
 </body>
