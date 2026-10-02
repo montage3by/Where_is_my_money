@@ -552,6 +552,28 @@ $('#weight-form').addEventListener('submit', async (e) => {
   }
 });
 
+// ——— Погода и курсы ———
+async function loadInfo() {
+  let data;
+  try {
+    data = await api('/api/info');
+  } catch {
+    return;
+  }
+  const { weather: w, fx } = data;
+  if (!w && !fx) return;
+  const fmtDay = (d, i) => (i === 0 ? 'Сегодня' : 'Завтра');
+  const num = (v, digits) => v.toLocaleString('ru-RU', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  $('#info').innerHTML = `
+    ${w ? `<div class="weather">
+      <div class="now"><span class="w-icon">${w.icon}</span><span class="w-temp">${w.temp > 0 ? '+' : ''}${w.temp}°</span>
+        <span class="w-desc">Батуми · ${esc(w.text)}<br><span class="kcal">ощущается ${w.feels}°, ветер ${w.wind} м/с</span></span></div>
+      <div class="w-days">${w.days.map((d, i) => `<span>${fmtDay(d.date, i)} ${d.icon} ${d.max}° / ${d.min}°${d.rain >= 30 ? ` · ☔ ${d.rain}%` : ''}</span>`).join('')}</div>
+    </div>` : ''}
+    ${fx ? `<div class="fx">${fx.rates.map((r) => `<div><span class="kcal">${esc(r.label)}</span><b>${num(r.value, r.to === 'GEL' ? 3 : 2)}</b></div>`).join('')}</div>` : ''}`;
+  $('#info').hidden = false;
+}
+
 async function refresh() {
   try {
     const at = writeSeq;
@@ -593,4 +615,6 @@ async function refresh() {
   // Синхронизация, если отмечали с другого устройства
   document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && refresh());
   setInterval(refresh, 30000); // заодно обновляет «сейчас» и просроченные
+  loadInfo();
+  setInterval(loadInfo, 30 * 60 * 1000);
 })();

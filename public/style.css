@@ -205,3 +205,15 @@ h1 { letter-spacing: 0.04em; }
   background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
 .weekdays input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
 .weekdays input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* ——— Погода и курсы ——— */
+.info { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.weather .now { display: flex; align-items: center; gap: 10px; }
+.w-icon { font-size: 30px; line-height: 1; }
+.w-temp { font-family: var(--serif); font-size: 32px; line-height: 1; }
+.w-desc { font-size: 15px; line-height: 1.35; }
+.w-days { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; font-size: 14px; color: var(--muted); }
+.fx { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; border-top: 1px solid var(--line); padding-top: 12px; }
+.fx div { display: flex; flex-direction: column; gap: 2px; }
+.fx .kcal { font-size: 12px; }
+.fx b { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }

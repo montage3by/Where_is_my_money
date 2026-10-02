@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const plan = require('./plan');
+const { info } = require('./info');
 
 const PORT = Number(process.env.PORT) || 3000;
 // На Railway сюда монтируется Volume, иначе отметки сбрасываются при каждом деплое.
@@ -159,6 +160,7 @@ function serveStatic(req, res) {
 async function handleApi(req, res, route) {
   if (req.method === 'GET' && route === '/api/plan') return send(res, 200, { ...plan, routine: state.routine });
   if (req.method === 'GET' && route === '/api/state') return send(res, 200, state);
+  if (req.method === 'GET' && route === '/api/info') return send(res, 200, await info());
   if (req.method === 'GET' && route === '/api/export') {
     res.setHeader('Content-Disposition', `attachment; filename="tracker-${new Date().toISOString().slice(0, 10)}.json"`);
     return send(res, 200, JSON.stringify(state, null, 2));
