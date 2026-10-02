@@ -66,6 +66,41 @@
     </section>
   </main>
 
+  <dialog id="task-dialog">
+    <form id="task-form" novalidate>
+      <h2 id="task-dialog-title">Новое дело</h2>
+      <label class="field"><span>Название</span><input name="title" maxlength="120" autocomplete="off"></label>
+      <div class="row2">
+        <label class="field"><span>С</span><input type="time" name="start"></label>
+        <label class="field"><span>До</span><input type="time" name="end"></label>
+      </div>
+      <div class="field"><span>Тип</span>
+        <div class="seg">
+          <label><input type="radio" name="kind" value="simple" checked><span>Галочка</span></label>
+          <label><input type="radio" name="kind" value="subtasks"><span>Подпункты</span></label>
+          <label><input type="radio" name="kind" value="counter"><span>Счётчик</span></label>
+        </div>
+      </div>
+      <label class="field" data-kind="subtasks" hidden><span>Подпункты — по одному на строку</span><textarea name="subtasks" rows="4"></textarea></label>
+      <label class="field" data-kind="counter" hidden><span>Цель</span><input type="number" name="target" min="1" max="10000" inputmode="numeric"></label>
+      <label class="field"><span>Описание</span><textarea name="details" rows="2" maxlength="1000"></textarea></label>
+      <div class="field"><span>Когда</span>
+        <div class="seg">
+          <label><input type="radio" name="when" value="date" checked><span>Один день</span></label>
+          <label><input type="radio" name="when" value="once"><span>Пока не сделаю</span></label>
+          <label><input type="radio" name="when" value="daily"><span>Каждый день</span></label>
+        </div>
+      </div>
+      <label class="field" data-when-date><span>Дата</span><input type="date" name="date"></label>
+      <p class="form-error" id="task-error" hidden></p>
+      <div class="dialog-actions">
+        <button type="button" class="danger" data-delete-task hidden>Удалить</button>
+        <button type="button" data-close>Отмена</button>
+        <button type="submit" class="primary">Сохранить</button>
+      </div>
+    </form>
+  </dialog>
+
   <div class="toast" id="toast" hidden></div>
   <script src="app.js"></script>
 </body>

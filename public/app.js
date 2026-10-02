@@ -52,13 +52,29 @@ function toast(msg) {
 
 const isDone = (id) => Boolean(state.checks[id]);
 
+// Запись на сервер. Ответы могут прийти не по порядку: применяем только ответ на последнюю
+// запись — в нём уже есть все предыдущие. Иначе быстрые отметки подряд «слетали».
+let writeSeq = 0;
+let pendingWrites = 0;
+async function write(path, body) {
+  const my = ++writeSeq;
+  pendingWrites++;
+  try {
+    const fresh = await api(path, body);
+    if (my === writeSeq) state = fresh;
+    return fresh;
+  } finally {
+    pendingWrites--;
+  }
+}
+
 async function toggle(id, done) {
   const prev = state.checks[id];
   if (done) state.checks[id] = new Date().toISOString();
   else delete state.checks[id];
   render();
   try {
-    state = await api('/api/check', { id, done });
+    await write('/api/check', { id, done });
   } catch (e) {
     if (prev) state.checks[id] = prev;
     else delete state.checks[id];
@@ -86,20 +102,25 @@ function doneOn(date, t) {
   if (!ids.every(isDone)) return null;
   return ymd(new Date(ids.map((id) => state.checks[id]).sort().pop()));
 }
+// Список дел редактируется на сайте и приходит с сервера в state.routine
+const routine = () => state.routine || plan.routine;
+
 // Прошлые дни — по сохранённому на тот день списку, сегодня и дальше — по актуальному
 function tasksFor(date) {
   const snap = state.snapshots && state.snapshots[date];
-  if (!snap || date >= ymd(new Date())) return plan.routine;
-  return [...snap, ...plan.routine.filter((t) => t.once)];
+  if (!snap || date >= ymd(new Date())) return routine();
+  return [...snap, ...routine().filter((t) => t.once)];
 }
 
+// По времени: сначала с временем начала/окончания, без времени — в конце в порядке добавления
+const sortKey = (t) => t.start || t.end || '99:99';
 const visibleTasks = (date) => tasksFor(date).filter((t) => {
   if (t.date) return t.date === date;
   if (!t.once) return true;
   if (t.from && date < t.from) return false;
   const d = doneOn(date, t);
   return !d || date <= d;
-});
+}).map((t, i) => [t, i]).sort((a, b) => sortKey(a[0]).localeCompare(sortKey(b[0])) || a[1] - b[1]).map(([t]) => t);
 const count = (date, t) => state.counters[`${t.id}:${date}`] || 0;
 
 function taskProgress(date, t) {
@@ -156,7 +177,8 @@ function renderTodos() {
   $('#todo-list').innerHTML = tasks.map((t, i) => {
     const p = progress[i];
     const status = taskStatus(t, p.done, date);
-    const expandable = Boolean(t.subtasks || t.counter || t.details || t.meal !== undefined);
+    const expandable = true; // внутри всегда есть хотя бы кнопка «Изменить»
+    const editable = routine().some((x) => x.id === t.id);
     const open = expandable && expanded.has(t.id);
     const time = t.start && t.end ? `${t.start}–${t.end}` : t.start ? `в ${t.start}` : t.end ? `до ${t.end}` : '';
 
@@ -175,6 +197,7 @@ function renderTodos() {
         ${t.details ? `<p class="details">${esc(t.details)}</p>` : ''}
         ${t.subtasks ? t.subtasks.map((st, si) => taskHtml({ id: `${taskKey(date, t)}:${si}`, title: st })).join('') : ''}
         ${t.counter ? counterHtml(date, t) : ''}
+        ${editable ? `<button class="edit-btn" data-edit="${t.id}">✎ Изменить</button>` : ''}
       </div>`;
     }
 
@@ -192,7 +215,86 @@ function renderTodos() {
       </div>
       ${body}
     </div>`;
-  }).join('');
+  }).join('') + `<button class="add-btn" data-add>+ Добавить дело</button>`;
+}
+
+// ——— Редактор дел ———
+const dlg = () => $('#task-dialog');
+const form = () => $('#task-form');
+let editingId = null;
+
+function syncFormVisibility() {
+  const f = form();
+  const kind = f.kind.value;
+  const when = f.when.value;
+  f.querySelectorAll('[data-kind]').forEach((el) => (el.hidden = el.dataset.kind !== kind));
+  const dateRow = f.querySelector('[data-when-date]');
+  dateRow.hidden = when === 'daily';
+  dateRow.querySelector('span').textContent = when === 'once' ? 'Начать с' : 'Дата';
+}
+
+function openEditor(task) {
+  const f = form();
+  f.reset();
+  showFormError('');
+  editingId = task ? task.id : null;
+  $('#task-dialog-title').textContent = task ? 'Изменить дело' : 'Новое дело';
+  f.querySelector('[data-delete-task]').hidden = !task;
+  const t = task || {};
+  f.title.value = t.title || '';
+  f.start.value = t.start || '';
+  f.end.value = t.end || '';
+  f.details.value = t.details || '';
+  f.kind.value = t.subtasks ? 'subtasks' : t.counter ? 'counter' : 'simple';
+  f.subtasks.value = (t.subtasks || []).join('\n');
+  f.target.value = t.counter ? t.counter.target : '';
+  f.when.value = !task ? 'date' : t.date ? 'date' : t.once ? 'once' : 'daily';
+  f.date.value = t.date || t.from || viewDate;
+  syncFormVisibility();
+  dlg().showModal();
+  if (!task) f.title.focus();
+}
+
+function showFormError(msg) {
+  const el = $('#task-error');
+  el.textContent = msg;
+  el.hidden = !msg;
+}
+
+async function saveTask(e) {
+  e.preventDefault();
+  const f = form();
+  const body = {
+    id: editingId || undefined,
+    title: f.title.value,
+    start: f.start.value,
+    end: f.end.value,
+    details: f.details.value,
+    kind: f.kind.value,
+    subtasks: f.subtasks.value.split('\n'),
+    target: f.target.value,
+    when: f.when.value,
+    date: f.date.value,
+  };
+  try {
+    await write('/api/task', body);
+    dlg().close();
+    render();
+  } catch (err) {
+    showFormError(err.message);
+  }
+}
+
+async function deleteTask() {
+  if (!editingId || !confirm('Удалить это дело? Прошлые дни с отметками останутся в истории.')) return;
+  try {
+    await write('/api/task/delete', { id: editingId });
+    expanded.delete(editingId);
+    dlg().close();
+    render();
+  } catch (err) {
+    showFormError(err.message);
+  }
 }
 
 // Все даты, за которые что-то отмечено, — от новых к старым
@@ -235,7 +337,7 @@ async function setGroup(taskId, done) {
   ids.forEach((id) => (done ? (state.checks[id] = state.checks[id] || new Date().toISOString()) : delete state.checks[id]));
   render();
   try {
-    state = await api('/api/check', { ids, done });
+    await write('/api/check', { ids, done });
   } catch (e) {
     ids.forEach((id) => (prev[id] ? (state.checks[id] = prev[id]) : delete state.checks[id]));
     toast('Не сохранилось: ' + e.message);
@@ -254,7 +356,7 @@ async function bumpCounter(taskId, step) {
   renderTodos();
   const seq = ++counterSeq;
   try {
-    await api('/api/counter', { id: taskId, date, value });
+    await write('/api/counter', { id: taskId, date, value });
   } catch (e) {
     toast('Не сохранилось: ' + e.message);
     if (seq === counterSeq) refresh();
@@ -349,6 +451,12 @@ document.addEventListener('click', async (e) => {
   const tab = e.target.closest('[data-tab]');
   if (tab) return showTab(tab.dataset.tab);
 
+  if (e.target.closest('[data-add]')) return openEditor(null);
+  const ed = e.target.closest('[data-edit]');
+  if (ed) return openEditor(routine().find((t) => t.id === ed.dataset.edit));
+  if (e.target.closest('[data-close]')) return dlg().close();
+  if (e.target.closest('[data-delete-task]')) return deleteTask();
+
   const exp = e.target.closest('[data-expand]');
   if (exp) {
     const id = exp.dataset.expand;
@@ -386,7 +494,7 @@ document.addEventListener('click', async (e) => {
     const what = reset.dataset.reset === 'meals' ? 'все отметки рациона' : 'весь список покупок';
     if (!confirm(`Сбросить ${what}?`)) return;
     try {
-      state = await api('/api/reset', { scope: reset.dataset.reset });
+      await write('/api/reset', { scope: reset.dataset.reset });
       render();
     } catch (err) {
       toast('Ошибка: ' + err.message);
@@ -398,7 +506,7 @@ document.addEventListener('click', async (e) => {
   if (del) {
     if (!confirm('Удалить запись?')) return;
     try {
-      state = await api('/api/weight/delete', { date: del.dataset.del });
+      await write('/api/weight/delete', { date: del.dataset.del });
       renderWeights();
     } catch (err) {
       toast('Ошибка: ' + err.message);
@@ -406,11 +514,16 @@ document.addEventListener('click', async (e) => {
   }
 });
 
+$('#task-form').addEventListener('submit', saveTask);
+$('#task-form').addEventListener('change', (e) => e.target.matches('[name=kind],[name=when]') && syncFormVisibility());
+// Клик по затемнению вокруг окна закрывает его
+$('#task-dialog').addEventListener('click', (e) => e.target === dlg() && dlg().close());
+
 $('#weight-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const f = new FormData(e.target);
   try {
-    state = await api('/api/weight', { date: f.get('date'), kg: String(f.get('kg')).replace(',', '.') });
+    await write('/api/weight', { date: f.get('date'), kg: String(f.get('kg')).replace(',', '.') });
     e.target.kg.value = '';
     renderWeights();
   } catch (err) {
@@ -420,7 +533,11 @@ $('#weight-form').addEventListener('submit', async (e) => {
 
 async function refresh() {
   try {
-    state = await api('/api/state');
+    const at = writeSeq;
+    const fresh = await api('/api/state');
+    // Пока идёт запись (или она прошла, пока мы ждали), фоновое обновление устарело — не затираем отметки
+    if (pendingWrites || at !== writeSeq) return;
+    state = fresh;
     if (followDefault) viewDate = defaultDate();
     render();
   } catch {}
@@ -449,7 +566,7 @@ async function refresh() {
   selectedDay = (todoDay().getDay() + 6) % 7; // рацион — на тот же день недели
   // Сразу раскрыть дело, которое идёт сейчас
   const today = ymd(new Date());
-  plan.routine.forEach((t) => taskStatus(t, taskProgress(today, t).done, today) === 'now' && expanded.add(t.id));
+  routine().forEach((t) => taskStatus(t, taskProgress(today, t).done, today) === 'now' && expanded.add(t.id));
   render();
 
   // Синхронизация, если отмечали с другого устройства

@@ -18,15 +18,15 @@ const validIds = new Set([
 // Дела дня: todo:<YYYY-MM-DD>:<taskId>[:<subtask>], разовые — todo:once:<taskId>[:<subtask>]
 const checkableIds = (tasks) => new Set(tasks.flatMap((t) =>
   t.subtasks ? t.subtasks.map((_, i) => `${t.id}:${i}`) : t.counter ? [] : [t.id]));
-const dailyIds = checkableIds(plan.routine.filter((t) => !t.once));
-const onceIds = checkableIds(plan.routine.filter((t) => t.once));
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 // Распорядок будет меняться: каждый день запоминает свой список дел,
 // чтобы прошлые дни в истории показывались так, как были.
 const TZ = process.env.TZ_NAME || 'Asia/Tbilisi';
 const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(new Date());
-const dailyRoutine = (date) => plan.routine.filter((t) => !t.once && (!t.date || t.date === date));
+// Список дел редактируется на сайте и живёт в state.routine; plan.routine — только начальный
+const dailyRoutine = (date) => state.routine.filter((t) => !t.once && (!t.date || t.date === date));
 
 function snapshotDay(date) {
   // Сегодня и будущее — всегда по актуальному плану; прошлое не трогаем, если уже сохранено
@@ -37,17 +37,55 @@ function isValidId(id) {
   if (validIds.has(id)) return true;
   const m = /^todo:(\d{4}-\d{2}-\d{2}|once):(.+)$/.exec(String(id));
   if (!m) return false;
-  if (m[1] === 'once') return onceIds.has(m[2]);
-  return dailyIds.has(m[2]) || Boolean(state.snapshots[m[1]] && checkableIds(state.snapshots[m[1]]).has(m[2]));
+  if (m[1] === 'once') return checkableIds(state.routine.filter((t) => t.once)).has(m[2]);
+  return checkableIds(state.routine.filter((t) => !t.once)).has(m[2])
+    || Boolean(state.snapshots[m[1]] && checkableIds(state.snapshots[m[1]]).has(m[2]));
 }
 
 function loadState() {
   try {
     const s = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-    return { checks: s.checks || {}, weights: s.weights || [], counters: s.counters || {}, snapshots: s.snapshots || {} };
+    return {
+      checks: s.checks || {}, weights: s.weights || [], counters: s.counters || {}, snapshots: s.snapshots || {},
+      routine: s.routine || structuredClone(plan.routine),
+    };
   } catch {
-    return { checks: {}, weights: [], counters: {}, snapshots: {} };
+    return { checks: {}, weights: [], counters: {}, snapshots: {}, routine: structuredClone(plan.routine) };
   }
+}
+
+// Дело из формы на сайте → проверенный объект. Ошибки — понятным текстом для пользователя.
+function cleanTask(input, existing) {
+  const str = (v, max) => String(v ?? '').trim().slice(0, max);
+  const title = str(input.title, 120);
+  if (!title) throw new Error('Нужно название');
+  const t = { id: existing ? existing.id : 't' + crypto.randomBytes(4).toString('hex'), title };
+  if (existing && existing.meal !== undefined) t.meal = existing.meal;
+  for (const k of ['start', 'end']) {
+    const v = str(input[k], 5);
+    if (!v) continue;
+    if (!TIME_RE.test(v)) throw new Error('Время — в формате ЧЧ:ММ');
+    t[k] = v;
+  }
+  if (t.start && t.end && t.end <= t.start) throw new Error('Конец раньше начала');
+  const details = str(input.details, 1000);
+  if (details) t.details = details;
+  if (input.kind === 'subtasks') {
+    const subs = (Array.isArray(input.subtasks) ? input.subtasks : []).map((x) => str(x, 200)).filter(Boolean).slice(0, 30);
+    if (!subs.length) throw new Error('Добавь хотя бы один подпункт');
+    t.subtasks = subs;
+  } else if (input.kind === 'counter') {
+    const target = Math.round(Number(input.target));
+    if (!(target >= 1 && target <= 10000)) throw new Error('Цель — от 1 до 10000');
+    t.counter = { target, steps: target >= 50 ? [1, 5, 10] : target >= 10 ? [1, 5] : [1] };
+  }
+  if (input.when === 'date' || input.when === 'once') {
+    const d = str(input.date, 10);
+    if (!DATE_RE.test(d)) throw new Error('Нужна дата');
+    if (input.when === 'date') t.date = d;
+    else Object.assign(t, { once: true, from: d });
+  }
+  return t;
 }
 
 let state = loadState();
@@ -106,7 +144,7 @@ function serveStatic(req, res) {
 }
 
 async function handleApi(req, res, route) {
-  if (req.method === 'GET' && route === '/api/plan') return send(res, 200, plan);
+  if (req.method === 'GET' && route === '/api/plan') return send(res, 200, { ...plan, routine: state.routine });
   if (req.method === 'GET' && route === '/api/state') return send(res, 200, state);
   if (req.method === 'GET' && route === '/api/export') {
     res.setHeader('Content-Disposition', `attachment; filename="tracker-${new Date().toISOString().slice(0, 10)}.json"`);
@@ -133,7 +171,7 @@ async function handleApi(req, res, route) {
     }
   } else if (route === '/api/counter') {
     const date = String(body.date);
-    const tasks = [...plan.routine, ...(state.snapshots[date] || [])];
+    const tasks = [...state.routine, ...(state.snapshots[date] || [])];
     const task = tasks.find((t) => t.id === body.id && t.counter);
     const value = Math.round(Number(body.value));
     if (!task || !DATE_RE.test(date) || !(value >= 0 && value <= 10000)) return send(res, 400, { error: 'bad counter' });
@@ -141,6 +179,21 @@ async function handleApi(req, res, route) {
     const key = `${body.id}:${body.date}`;
     if (value) state.counters[key] = value;
     else delete state.counters[key];
+  } else if (route === '/api/task') {
+    const i = body.id ? state.routine.findIndex((t) => t.id === body.id) : -1;
+    if (body.id && i < 0) return send(res, 404, { error: 'Дело не найдено' });
+    let task;
+    try {
+      task = cleanTask(body, state.routine[i]);
+    } catch (e) {
+      return send(res, 400, { error: e.message });
+    }
+    if (i >= 0) state.routine[i] = task;
+    else state.routine.push(task);
+  } else if (route === '/api/task/delete') {
+    const before = state.routine.length;
+    state.routine = state.routine.filter((t) => t.id !== body.id);
+    if (state.routine.length === before) return send(res, 404, { error: 'Дело не найдено' });
   } else if (route === '/api/reset') {
     const prefix = body.scope === 'meals' ? 'meal:' : body.scope === 'shopping' ? 'shop:' : null;
     if (!prefix) return send(res, 400, { error: 'scope must be meals or shopping' });
