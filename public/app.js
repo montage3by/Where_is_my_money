@@ -473,6 +473,10 @@ document.addEventListener('click', async (e) => {
   if (tab) return showTab(tab.dataset.tab);
 
   if (e.target.closest('[data-add]')) return openEditor(null);
+  if (e.target.closest('[data-city]')) return openCity();
+  const pick = e.target.closest('[data-pick]');
+  if (pick) return pickCity(Number(pick.dataset.pick));
+  if (e.target.closest('[data-city-close]')) return $('#city-dialog').close();
   const ed = e.target.closest('[data-edit]');
   if (ed) return openEditor(routine().find((t) => t.id === ed.dataset.edit));
   if (e.target.closest('[data-close]')) return dlg().close();
@@ -536,6 +540,15 @@ document.addEventListener('click', async (e) => {
 });
 
 $('#task-form').addEventListener('submit', saveTask);
+$('#city-q').addEventListener('input', () => {
+  clearTimeout(citySearchT);
+  citySearchT = setTimeout(searchCities, 350);
+});
+$('#city-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (searchCities.list?.length) pickCity(0);
+});
+$('#city-dialog').addEventListener('click', (e) => e.target === $('#city-dialog') && $('#city-dialog').close());
 $('#task-form').addEventListener('change', (e) => e.target.matches('[name=kind],[name=when]') && syncFormVisibility());
 // Клик по затемнению вокруг окна закрывает его
 $('#task-dialog').addEventListener('click', (e) => e.target === dlg() && dlg().close());
@@ -552,6 +565,46 @@ $('#weight-form').addEventListener('submit', async (e) => {
   }
 });
 
+// ——— Город для погоды ———
+let citySearchT;
+function openCity() {
+  $('#city-q').value = '';
+  $('#city-results').innerHTML = '';
+  $('#city-error').hidden = true;
+  $('#city-dialog').showModal();
+  $('#city-q').focus();
+}
+
+async function searchCities() {
+  const q = $('#city-q').value.trim();
+  if (q.length < 2) return ($('#city-results').innerHTML = '');
+  try {
+    const list = await api('/api/geo?q=' + encodeURIComponent(q));
+    if ($('#city-q').value.trim() !== q) return; // пока ждали, ввели другое
+    $('#city-error').hidden = true;
+    $('#city-results').innerHTML = list.length
+      ? list.map((c, i) => `<button type="button" class="city-opt" data-pick="${i}"><b>${esc(c.name)}</b><span class="kcal">${esc([c.region, c.country].filter(Boolean).join(', '))}</span></button>`).join('')
+      : '<p class="kcal">Ничего не нашлось</p>';
+    searchCities.list = list;
+  } catch (err) {
+    $('#city-error').textContent = err.message;
+    $('#city-error').hidden = false;
+  }
+}
+
+async function pickCity(i) {
+  const c = searchCities.list[i];
+  try {
+    await write('/api/settings/city', c);
+    $('#city-dialog').close();
+    $('#info').innerHTML = '<p class="kcal">Загружаю погоду…</p>';
+    loadInfo();
+  } catch (err) {
+    $('#city-error').textContent = err.message;
+    $('#city-error').hidden = false;
+  }
+}
+
 // ——— Погода и курсы ———
 async function loadInfo() {
   let data;
@@ -567,7 +620,7 @@ async function loadInfo() {
   $('#info').innerHTML = `
     ${w ? `<div class="weather">
       <div class="now"><span class="w-icon">${w.icon}</span><span class="w-temp">${w.temp > 0 ? '+' : ''}${w.temp}°</span>
-        <span class="w-desc">Батуми · ${esc(w.text)}<br><span class="kcal">ощущается ${w.feels}°, ветер ${w.wind} м/с</span></span></div>
+        <span class="w-desc"><button class="city-btn" data-city>📍 ${esc(w.city)}</button> · ${esc(w.text)}<br><span class="kcal">ощущается ${w.feels}°, ветер ${w.wind} м/с</span></span></div>
       <div class="w-days">${w.days.map((d, i) => `<span>${fmtDay(d.date, i)} ${d.icon} ${d.max}° / ${d.min}°${d.rain >= 30 ? ` · ☔ ${d.rain}%` : ''}</span>`).join('')}</div>
     </div>` : ''}
     ${fx ? `<div class="fx">${fx.rates.map((r) => `<div><span class="kcal">${esc(r.label)}</span><b>${num(r.value, r.to === 'GEL' ? 3 : 2)}</b></div>`).join('')}</div>` : ''}`;

@@ -113,6 +113,16 @@
     </form>
   </dialog>
 
+  <dialog id="city-dialog">
+    <form id="city-form" novalidate>
+      <h2>Город для погоды</h2>
+      <input id="city-q" placeholder="Например, Тбилиси" autocomplete="off" enterkeyhint="search">
+      <div id="city-results"></div>
+      <p class="form-error" id="city-error" hidden></p>
+      <div class="dialog-actions"><button type="button" data-city-close>Отмена</button></div>
+    </form>
+  </dialog>
+
   <div class="toast" id="toast" hidden></div>
   <script src="app.js"></script>
 </body>

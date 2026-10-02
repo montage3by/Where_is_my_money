@@ -1,10 +1,12 @@
-// Погода в Батуми (Open-Meteo) и курсы валют (open.er-api.com) — бесплатно и без ключей.
+// Погода (Open-Meteo, город выбирается на сайте) и курсы валют (open.er-api.com) — бесплатно и без ключей.
 // Сервер кэширует ответы и при сбое источника отдаёт последние известные данные.
 
-const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast?latitude=41.6168&longitude=41.6367'
+// Погода — для города, выбранного на сайте (по умолчанию Батуми)
+const DEFAULT_CITY = { name: 'Батуми', country: 'Грузия', lat: 41.6168, lon: 41.6367, tz: 'Asia/Tbilisi' };
+const weatherUrl = (c) => `https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}`
   + '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m'
   + '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code'
-  + '&forecast_days=2&wind_speed_unit=ms&timezone=Asia/Tbilisi';
+  + `&forecast_days=2&wind_speed_unit=ms&timezone=${encodeURIComponent(c.tz || 'auto')}`;
 const FX_URL = 'https://open.er-api.com/v6/latest/USD';
 
 const WEATHER_TTL = 30 * 60 * 1000;
@@ -38,11 +40,12 @@ async function getJson(url, attempts = 3) {
 
 const round = (n, d) => Math.round(n * 10 ** d) / 10 ** d;
 
-async function loadWeather() {
-  const w = await getJson(WEATHER_URL);
+async function loadWeather(city) {
+  const w = await getJson(weatherUrl(city));
   const c = w.current;
   const d = w.daily;
   return {
+    city: city.name,
     temp: Math.round(c.temperature_2m),
     feels: Math.round(c.apparent_temperature),
     wind: Math.round(c.wind_speed_10m),
@@ -72,27 +75,38 @@ async function loadFx() {
   };
 }
 
-const cache = {
-  weather: { data: null, at: 0, ttl: WEATHER_TTL, load: loadWeather, pending: null },
-  fx: { data: null, at: 0, ttl: FX_TTL, load: loadFx, pending: null },
-};
+// Кэш по ключу: курсы — один, погода — на каждый город
+const cache = {};
+const entry = (key, ttl, load) => (cache[key] = cache[key] || { data: null, at: 0, ttl, load, pending: null });
 
-async function get(key) {
-  const c = cache[key];
+async function get(c) {
   if (c.data && Date.now() - c.at < c.ttl) return c.data;
   c.pending = c.pending || c.load()
     .then((data) => Object.assign(c, { data, at: Date.now() }).data)
     .catch((e) => {
-      console.error(`info ${key}:`, e.message);
+      console.error('info:', e.message);
       return c.data; // последние известные данные или null
     })
     .finally(() => (c.pending = null));
   return c.pending;
 }
 
-async function info() {
-  const [weather, fx] = await Promise.all([get('weather'), get('fx')]);
+async function info(city = DEFAULT_CITY) {
+  const [weather, fx] = await Promise.all([
+    get(entry(`weather:${city.lat},${city.lon}`, WEATHER_TTL, () => loadWeather(city))),
+    get(entry('fx', FX_TTL, loadFx)),
+  ]);
   return { weather, fx };
 }
 
-module.exports = { info };
+// Поиск города по названию (Open-Meteo Geocoding)
+async function searchCity(q) {
+  const url = `https://geocoding-api.open-meteo.com/v1/search?count=6&language=ru&name=${encodeURIComponent(q)}`;
+  const r = await getJson(url, 2);
+  return (r.results || []).map((x) => ({
+    name: x.name, region: x.admin1 || '', country: x.country || '',
+    lat: x.latitude, lon: x.longitude, tz: x.timezone || 'auto',
+  }));
+}
+
+module.exports = { info, searchCity, DEFAULT_CITY };

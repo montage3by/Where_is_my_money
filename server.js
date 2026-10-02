@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const plan = require('./plan');
-const { info } = require('./info');
+const { info, searchCity, DEFAULT_CITY } = require('./info');
 
 const PORT = Number(process.env.PORT) || 3000;
 // На Railway сюда монтируется Volume, иначе отметки сбрасываются при каждом деплое.
@@ -52,9 +52,10 @@ function loadState() {
     return {
       checks: s.checks || {}, weights: s.weights || [], counters: s.counters || {}, snapshots: s.snapshots || {},
       routine: s.routine || structuredClone(plan.routine),
+      settings: { city: DEFAULT_CITY, ...s.settings },
     };
   } catch {
-    return { checks: {}, weights: [], counters: {}, snapshots: {}, routine: structuredClone(plan.routine) };
+    return { checks: {}, weights: [], counters: {}, snapshots: {}, routine: structuredClone(plan.routine), settings: { city: DEFAULT_CITY } };
   }
 }
 
@@ -160,7 +161,16 @@ function serveStatic(req, res) {
 async function handleApi(req, res, route) {
   if (req.method === 'GET' && route === '/api/plan') return send(res, 200, { ...plan, routine: state.routine });
   if (req.method === 'GET' && route === '/api/state') return send(res, 200, state);
-  if (req.method === 'GET' && route === '/api/info') return send(res, 200, await info());
+  if (req.method === 'GET' && route === '/api/info') return send(res, 200, await info(state.settings.city));
+  if (req.method === 'GET' && route === '/api/geo') {
+    const q = new URL(req.url, 'http://x').searchParams.get('q')?.trim().slice(0, 100);
+    if (!q) return send(res, 200, []);
+    try {
+      return send(res, 200, await searchCity(q));
+    } catch {
+      return send(res, 502, { error: 'Поиск городов недоступен, попробуй ещё раз' });
+    }
+  }
   if (req.method === 'GET' && route === '/api/export') {
     res.setHeader('Content-Disposition', `attachment; filename="tracker-${new Date().toISOString().slice(0, 10)}.json"`);
     return send(res, 200, JSON.stringify(state, null, 2));
@@ -215,7 +225,18 @@ async function handleApi(req, res, route) {
     if (!ok(body.checks, false) || !ok(body.counters, false) || !ok(body.weights, true) || !ok(body.routine, true)) {
       return send(res, 400, { error: 'Это не файл выгрузки трекера' });
     }
-    state = { checks: body.checks, counters: body.counters, weights: body.weights, snapshots: ok(body.snapshots, false) ? body.snapshots : {}, routine: body.routine };
+    state = {
+      checks: body.checks, counters: body.counters, weights: body.weights, routine: body.routine,
+      snapshots: ok(body.snapshots, false) ? body.snapshots : {},
+      settings: { city: DEFAULT_CITY, ...(ok(body.settings, false) ? body.settings : {}) },
+    };
+  } else if (route === '/api/settings/city') {
+    const lat = Number(body.lat);
+    const lon = Number(body.lon);
+    const name = String(body.name || '').trim().slice(0, 80);
+    if (!name || !(lat >= -90 && lat <= 90) || !(lon >= -180 && lon <= 180)) return send(res, 400, { error: 'Неверный город' });
+    const tz = /^[A-Za-z_]+(\/[A-Za-z_+-]+)*$/.test(String(body.tz)) ? String(body.tz) : 'auto';
+    state.settings.city = { name, country: String(body.country || '').slice(0, 80), lat, lon, tz };
   } else if (route === '/api/reset') {
     const prefix = body.scope === 'meals' ? 'meal:' : body.scope === 'shopping' ? 'shop:' : null;
     if (!prefix) return send(res, 400, { error: 'scope must be meals or shopping' });
