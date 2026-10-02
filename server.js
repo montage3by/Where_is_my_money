@@ -92,7 +92,7 @@ function readBody(req) {
   });
 }
 
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png' };
 
 function serveStatic(req, res) {
   const urlPath = req.url.split('?')[0];
@@ -165,6 +165,8 @@ async function handleApi(req, res, route) {
 const server = http.createServer((req, res) => {
   const route = req.url.split('?')[0];
   if (route === '/health') return send(res, 200, { ok: true });
+  // Иконки — без пароля: iOS скачивает иконку для экрана «Домой» без авторизации
+  if (route === '/favicon.png' || route === '/apple-touch-icon.png') return serveStatic(req, res);
   if (!authorized(req)) {
     res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="tracker", charset="UTF-8"' });
     return res.end('Auth required');
