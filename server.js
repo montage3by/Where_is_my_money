@@ -2,9 +2,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const Anthropic = require('@anthropic-ai/sdk');
 const plan = require('./plan');
-const ai = require('./ai');
 
 const PORT = Number(process.env.PORT) || 3000;
 // На Railway сюда монтируется Volume, иначе отметки сбрасываются при каждом деплое.
@@ -28,7 +26,10 @@ const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 const TZ = process.env.TZ_NAME || 'Asia/Tbilisi';
 const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(new Date());
 // Список дел редактируется на сайте и живёт в state.routine; plan.routine — только начальный
-const dailyRoutine = (date) => state.routine.filter((t) => !t.once && (!t.date || t.date === date) && (!t.from || t.from <= date));
+// Дни недели — как Date.getDay(): 0 воскресенье … 6 суббота
+const weekday = (date) => new Date(`${date}T12:00:00Z`).getUTCDay();
+const dailyRoutine = (date) => state.routine.filter((t) => !t.once && (!t.date || t.date === date)
+  && (!t.from || t.from <= date) && (!t.days || t.days.includes(weekday(date))));
 
 function snapshotDay(date) {
   // Сегодня и будущее — всегда по актуальному плану; прошлое не трогаем, если уже сохранено
@@ -91,6 +92,11 @@ function cleanTask(input, existing) {
     const d = str(input.date, 10);
     if (d && !DATE_RE.test(d)) throw new Error('Дата — в формате ГГГГ-ММ-ДД');
     if (d) t.from = d;
+    if (Array.isArray(input.days)) {
+      const days = [...new Set(input.days.map(Number))].filter((x) => Number.isInteger(x) && x >= 0 && x <= 6).sort();
+      if (!days.length) throw new Error('Выбери хотя бы один день недели');
+      if (days.length < 7) t.days = days;
+    }
   }
   return t;
 }
@@ -151,7 +157,7 @@ function serveStatic(req, res) {
 }
 
 async function handleApi(req, res, route) {
-  if (req.method === 'GET' && route === '/api/plan') return send(res, 200, { ...plan, routine: state.routine, ai: ai.enabled() });
+  if (req.method === 'GET' && route === '/api/plan') return send(res, 200, { ...plan, routine: state.routine });
   if (req.method === 'GET' && route === '/api/state') return send(res, 200, state);
   if (req.method === 'GET' && route === '/api/export') {
     res.setHeader('Content-Disposition', `attachment; filename="tracker-${new Date().toISOString().slice(0, 10)}.json"`);
@@ -197,35 +203,6 @@ async function handleApi(req, res, route) {
     }
     if (i >= 0) state.routine[i] = task;
     else state.routine.push(task);
-  } else if (route === '/api/ai/tasks') {
-    const text = String(body.text || '').trim().slice(0, 5000);
-    const selectedDate = DATE_RE.test(String(body.date)) ? String(body.date) : today();
-    if (!text) return send(res, 400, { error: 'Пустой текст' });
-    if (!ai.enabled()) return send(res, 503, { error: 'Голосовые дела не настроены: добавь ANTHROPIC_API_KEY в Variables на Railway' });
-    let drafts;
-    try {
-      drafts = await ai.parseTasks({ text, today: today(), selectedDate, existingTitles: state.routine.map((t) => t.title) });
-    } catch (e) {
-      console.error('ai:', e);
-      if (e instanceof Anthropic.AuthenticationError) return send(res, 502, { error: 'Ключ ANTHROPIC_API_KEY не подходит' });
-      if (e instanceof Anthropic.RateLimitError) return send(res, 502, { error: 'Слишком много запросов к Claude, попробуй через минуту' });
-      if (e instanceof Anthropic.APIError) return send(res, 502, { error: `Claude недоступен (${e.status ?? 'сеть'}), попробуй ещё раз` });
-      return send(res, 502, { error: e.message });
-    }
-    const added = [];
-    const skipped = [];
-    for (const d of drafts) {
-      try {
-        const task = cleanTask(d);
-        state.routine.push(task);
-        added.push(task);
-      } catch (e) {
-        skipped.push(`${d.title || 'без названия'}: ${e.message}`);
-      }
-    }
-    if (!added.length) return send(res, 422, { error: skipped.length ? `Не получилось: ${skipped.join('; ')}` : 'Не нашёл в тексте ни одного дела' });
-    saveState();
-    return send(res, 200, { ...state, added: added.map((t) => t.id), skipped });
   } else if (route === '/api/task/delete') {
     const before = state.routine.length;
     state.routine = state.routine.filter((t) => t.id !== body.id);
