@@ -26,11 +26,11 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 // чтобы прошлые дни в истории показывались так, как были.
 const TZ = process.env.TZ_NAME || 'Asia/Tbilisi';
 const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(new Date());
-const dailyRoutine = () => plan.routine.filter((t) => !t.once);
+const dailyRoutine = (date) => plan.routine.filter((t) => !t.once && (!t.date || t.date === date));
 
 function snapshotDay(date) {
   // Сегодня и будущее — всегда по актуальному плану; прошлое не трогаем, если уже сохранено
-  if (!state.snapshots[date] || date >= today()) state.snapshots[date] = dailyRoutine();
+  if (!state.snapshots[date] || date >= today()) state.snapshots[date] = dailyRoutine(date);
 }
 
 function isValidId(id) {

@@ -94,6 +94,7 @@ function tasksFor(date) {
 }
 
 const visibleTasks = (date) => tasksFor(date).filter((t) => {
+  if (t.date) return t.date === date;
   if (!t.once) return true;
   if (t.from && date < t.from) return false;
   const d = doneOn(date, t);
