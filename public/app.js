@@ -117,8 +117,8 @@ function tasksFor(date) {
 const sortKey = (t) => t.start || t.end || '99:99';
 const visibleTasks = (date) => tasksFor(date).filter((t) => {
   if (t.date) return t.date === date;
-  if (!t.once) return true;
   if (t.from && date < t.from) return false;
+  if (!t.once) return true;
   const d = doneOn(date, t);
   return !d || date <= d;
 }).map((t, i) => [t, i]).sort((a, b) => sortKey(a[0]).localeCompare(sortKey(b[0])) || a[1] - b[1]).map(([t]) => t);
@@ -233,8 +233,7 @@ function syncFormVisibility() {
   const when = f.when.value;
   f.querySelectorAll('[data-kind]').forEach((el) => (el.hidden = el.dataset.kind !== kind));
   const dateRow = f.querySelector('[data-when-date]');
-  dateRow.hidden = when === 'daily';
-  dateRow.querySelector('span').textContent = when === 'once' ? 'Начать с' : 'Дата';
+  dateRow.querySelector('span').textContent = when === 'date' ? 'Дата' : when === 'once' ? 'Начать с' : 'Начиная с (можно оставить пустым)';
 }
 
 function openEditor(task) {
@@ -253,7 +252,7 @@ function openEditor(task) {
   f.subtasks.value = (t.subtasks || []).join('\n');
   f.target.value = t.counter ? t.counter.target : '';
   f.when.value = !task ? 'date' : t.date ? 'date' : t.once ? 'once' : 'daily';
-  f.date.value = t.date || t.from || viewDate;
+  f.date.value = t.date || t.from || (task && !t.once ? '' : viewDate);
   syncFormVisibility();
   dlg().showModal();
   if (!task) f.title.focus();

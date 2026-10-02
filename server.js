@@ -28,7 +28,7 @@ const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 const TZ = process.env.TZ_NAME || 'Asia/Tbilisi';
 const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(new Date());
 // Список дел редактируется на сайте и живёт в state.routine; plan.routine — только начальный
-const dailyRoutine = (date) => state.routine.filter((t) => !t.once && (!t.date || t.date === date));
+const dailyRoutine = (date) => state.routine.filter((t) => !t.once && (!t.date || t.date === date) && (!t.from || t.from <= date));
 
 function snapshotDay(date) {
   // Сегодня и будущее — всегда по актуальному плану; прошлое не трогаем, если уже сохранено
@@ -86,6 +86,11 @@ function cleanTask(input, existing) {
     if (!DATE_RE.test(d)) throw new Error('Нужна дата');
     if (input.when === 'date') t.date = d;
     else Object.assign(t, { once: true, from: d });
+  } else {
+    // Каждый день — дата необязательна: с какого дня начинать
+    const d = str(input.date, 10);
+    if (d && !DATE_RE.test(d)) throw new Error('Дата — в формате ГГГГ-ММ-ДД');
+    if (d) t.from = d;
   }
   return t;
 }
