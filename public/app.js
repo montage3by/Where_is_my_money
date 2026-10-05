@@ -124,7 +124,14 @@ const visibleTasks = (date) => tasksFor(date).filter((t) => {
 }).map((t, i) => [t, i]).sort((a, b) => sortKey(a[0]).localeCompare(sortKey(b[0])) || a[1] - b[1]).map(([t]) => t);
 const count = (date, t) => state.counters[`${t.id}:${date}`] || 0;
 
+// Счётчик-лимит (например, сигареты): не цель, а потолок — в «сделано» не считается
+const isLimit = (t) => Boolean(t.counter && t.counter.limit);
+
 function taskProgress(date, t) {
+  if (isLimit(t)) {
+    const n = count(date, t);
+    return { done: false, n, of: t.counter.target, level: n > t.counter.target ? 'over' : n >= t.counter.target * 0.8 ? 'near' : '' };
+  }
   if (t.counter) return { done: count(date, t) >= t.counter.target, n: count(date, t), of: t.counter.target };
   if (t.subtasks) {
     const n = subIds(date, t).filter(isDone).length;
@@ -146,11 +153,14 @@ function taskStatus(t, done, date) {
 
 function counterHtml(date, t) {
   const n = count(date, t);
-  const { target, steps, unit } = t.counter;
+  const { target, steps, unit, limit } = t.counter;
   const u = unit ? ` ${esc(unit)}` : '';
+  const level = limit ? taskProgress(date, t).level : '';
+  const left = target - n;
+  const note = !limit ? '' : left > 0 ? ` · осталось ${left}` : left === 0 ? ' · лимит' : ` · сверх лимита на ${-left}`;
   return `<div class="counter">
-    <div class="counter-top"><span class="big">${n}${u}</span><span class="kcal">из ${target}${u}</span></div>
-    <div class="bar"><span style="width:${Math.min(100, (n / target) * 100)}%"></span></div>
+    <div class="counter-top"><span class="big">${n}${u}</span><span class="kcal">из ${target}${u}${limit ? ' макс.' : ''}${note}</span></div>
+    <div class="bar ${level}"><span style="width:${Math.min(100, (n / target) * 100)}%"></span></div>
     <div class="counter-btns">
       <button data-count="${t.id}" data-step="-${steps[0]}">−${steps[0]}</button>
       ${steps.map((st) => `<button data-count="${t.id}" data-step="${st}" class="plus">+${st}</button>`).join('')}
@@ -174,7 +184,8 @@ function renderTodos() {
   const tasks = visibleTasks(date);
   const progress = tasks.map((t) => taskProgress(date, t));
   const dayN = daysFromToday(date) - daysFromToday(plan.start) + 1;
-  $('#todo-progress').textContent = `День ${dayN} · сделано ${progress.filter((p) => p.done).length} из ${tasks.length}`;
+  const goals = tasks.filter((t) => !isLimit(t)).length;
+  $('#todo-progress').textContent = `День ${dayN} · сделано ${progress.filter((p) => p.done).length} из ${goals}`;
 
   $('#todo-list').innerHTML = tasks.map((t, i) => {
     const p = progress[i];
@@ -185,12 +196,13 @@ function renderTodos() {
     const time = t.start && t.end ? `${t.start}–${t.end}` : t.start ? `в ${t.start}` : t.end ? `до ${t.end}` : '';
 
     let check;
-    if (t.counter) check = `<span class="ring${p.done ? ' full' : ''}" style="--p:${Math.min(1, p.n / p.of)}"></span>`;
+    if (t.counter) check = `<span class="ring${p.done ? ' full' : ''}${isLimit(t) ? ` limit ${p.level}` : ''}" style="--p:${Math.min(1, p.n / p.of)}"></span>`;
     else if (t.subtasks) check = `<input type="checkbox" class="cb" data-group="${t.id}"${p.done ? ' checked' : ''} aria-label="Отметить всё">`;
     else check = `<input type="checkbox" class="cb" data-id="${taskKey(date, t)}"${p.done ? ' checked' : ''}>`;
 
     const badge = (status === 'now' ? '<span class="badge">сейчас</span>' : '') + (t.once ? '<span class="badge soft">разово</span>' : '')
-      + (t.days ? `<span class="badge soft">${daysLabel(t.days)}</span>` : '');
+      + (t.days ? `<span class="badge soft">${daysLabel(t.days)}</span>` : '')
+      + (isLimit(t) ? '<span class="badge soft">лимит</span>' : '');
     const countLabel = p.of ? `<span class="kcal">${p.n}/${p.of}${t.counter?.unit ? ' ' + esc(t.counter.unit) : ''}</span>` : '';
 
     let body = '';
@@ -340,7 +352,7 @@ function renderHistory() {
   }
   const current = ymd(todoDay());
   $('#todo-history').innerHTML = dates.map((date) => {
-    const tasks = visibleTasks(date);
+    const tasks = visibleTasks(date).filter((t) => !isLimit(t));
     const done = tasks.filter((t) => taskProgress(date, t).done).length;
     const label = new Date(date + 'T00:00').toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'long' });
     return `<button class="hist-row${date === current ? ' active' : ''}" data-goto="${date}">

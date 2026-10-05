@@ -88,7 +88,9 @@ function cleanTask(input, existing) {
     const unit = str(input.unit ?? prev?.unit ?? '', 10);
     const own = Array.isArray(input.steps) ? input.steps.map((x) => Math.round(Number(x))).filter((x) => x >= 1 && x <= 10000).slice(0, 4) : [];
     const steps = own.length ? own : prev?.unit ? prev.steps : target >= 50 ? [1, 5, 10] : target >= 10 ? [1, 5] : [1];
-    t.counter = { target, steps, ...(unit && { unit }) };
+    // limit — счётчик-ограничение (сигареты): цель — не превысить, в «сделано» не идёт
+    const limit = input.limit ?? prev?.limit ?? false;
+    t.counter = { target, steps, ...(unit && { unit }), ...(limit && { limit: true }) };
   }
   if (input.when === 'date' || input.when === 'once') {
     const d = str(input.date, 10);
