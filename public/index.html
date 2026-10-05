@@ -69,7 +69,7 @@
 
     <section id="tab-weight" class="panel" hidden>
       <form class="card weight-form" id="weight-form">
-        <label>Дата <input type="date" name="date" required></label>
+        <div class="dp-field wf-date"><span>Дата</span><input type="hidden" name="date"><button type="button" class="date-btn" data-dp-toggle></button><div class="dp" hidden></div></div>
         <label>Вес, кг <input type="number" name="kg" step="0.1" min="20" max="400" inputmode="decimal" required></label>
         <button type="submit">Записать</button>
       </form>
@@ -118,7 +118,7 @@
           <label><input type="checkbox" name="days" value="0"><span>Вс</span></label>
         </div>
       </div>
-      <label class="field" data-when-date><span>Дата</span><input type="date" name="date"></label>
+      <div class="field dp-field" data-when-date><span>Дата</span><input type="hidden" name="date"><button type="button" class="date-btn" data-dp-toggle></button><div class="dp" hidden></div></div>
       <p class="form-error" id="task-error" hidden></p>
       <div class="dialog-actions">
         <button type="button" class="danger" data-delete-task hidden>Удалить</button>

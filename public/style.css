@@ -92,7 +92,7 @@ h1 { font-family: var(--serif); font-weight: 500; font-size: 26px; margin: 0; le
 .weight-form { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; padding: 14px 16px; }
 .weight-form label { display: flex; flex-direction: column; font-size: 13px; color: var(--muted); gap: 4px; flex: 1 1 130px; }
 .weight-form input { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; height: 40px; }
-.weight-form button { font: inherit; font-weight: 600; background: var(--accent); color: var(--on-accent); border: 0; border-radius: 8px; padding: 9px 16px; cursor: pointer; flex: 1 1 100%; }
+.weight-form > button[type=submit] { font: inherit; font-weight: 600; background: var(--accent); color: var(--on-accent); border: 0; border-radius: 8px; padding: 9px 16px; cursor: pointer; flex: 1 1 100%; }
 .hint { color: var(--muted); font-size: 13px; margin: -4px 4px 12px; }
 .weights { list-style: none; }
 .weights li { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; }
@@ -254,3 +254,28 @@ h1 { letter-spacing: 0.04em; }
 .ring.limit.over { background: var(--warn); }
 .bar.near > span { background: var(--caution); }
 .bar.over > span { background: var(--warn); }
+
+/* ——— Календарь ——— */
+.dp-field { position: relative; }
+.date-btn { width: 100%; text-align: left; font: inherit; font-size: 16px; color: var(--text); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: pointer; }
+.date-btn:hover, .date-btn:focus-visible { border-color: var(--accent); outline: none; }
+.date-btn::first-letter { text-transform: uppercase; }
+.dp { margin-top: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); }
+.dp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.dp-head b { font-family: var(--serif); font-weight: 500; font-size: 17px; }
+.dp-head button { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line); background: var(--card);
+  color: var(--text); font-size: 18px; cursor: pointer; }
+.dp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+.dp-grid span { font-size: 12px; color: var(--muted); padding: 4px 0; }
+.dp-grid button { aspect-ratio: 1; min-height: 34px; border: 0; border-radius: 50%; background: none; color: var(--text);
+  font: inherit; font-size: 15px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.dp-grid button:hover { background: var(--card); }
+.dp-grid button.out { color: var(--muted); opacity: .5; }
+.dp-grid button.today { box-shadow: inset 0 0 0 1px var(--accent); color: var(--accent); }
+.dp-grid button.sel { background: var(--accent); color: var(--on-accent); font-weight: 600; box-shadow: none; }
+.dp-foot { display: flex; gap: 6px; margin-top: 8px; }
+.dp-foot button { flex: 1; padding: 8px 0; border-radius: 9px; border: 1px solid var(--line); background: var(--card);
+  color: var(--accent); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.wf-date { display: flex; flex-direction: column; font-size: 13px; color: var(--muted); gap: 4px; flex: 1 1 100%; }
+.wf-date .date-btn { height: 40px; padding: 8px 10px; font-size: 15px; }

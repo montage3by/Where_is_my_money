@@ -262,6 +262,8 @@ function syncFormVisibility() {
   f.querySelectorAll('[data-kind]').forEach((el) => (el.hidden = el.dataset.kind !== kind));
   const dateRow = f.querySelector('[data-when-date]');
   f.querySelector('[data-when-days]').hidden = when !== 'daily';
+  dateRow.dataset.clearable = when === 'daily' ? '1' : '';
+  dateRow.querySelector('.dp').hidden = true;
   dateRow.querySelector('span').textContent = when === 'date' ? 'Дата' : when === 'once' ? 'Начать с' : 'Начиная с (можно оставить пустым)';
 }
 
@@ -282,6 +284,7 @@ function openEditor(task) {
   f.target.value = t.counter ? t.counter.target : '';
   f.when.value = !task ? 'date' : t.date ? 'date' : t.once ? 'once' : 'daily';
   f.date.value = t.date || t.from || (task && !t.once ? '' : viewDate);
+  dpSyncAll(f);
   f.querySelectorAll('[name=days]').forEach((cb) => (cb.checked = !t.days || t.days.includes(Number(cb.value))));
   syncFormVisibility();
   dlg().showModal();
@@ -497,7 +500,91 @@ document.addEventListener('change', (e) => {
   }
 });
 
+// ——— Свой календарь вместо системного (его нельзя стилизовать) ———
+const MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+
+function dpSync(field) {
+  const v = field.querySelector('input').value;
+  field.querySelector('.date-btn').innerHTML = v
+    ? esc(new Date(v + 'T00:00').toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }))
+    : '<span class="kcal">Выбрать дату</span>';
+}
+const dpSyncAll = (root = document) => root.querySelectorAll('.dp-field').forEach((f) => {
+  f.querySelector('.dp').hidden = true;
+  dpSync(f);
+});
+
+function dpRender(field) {
+  const cal = field.querySelector('.dp');
+  const value = field.querySelector('input').value;
+  const [y, m] = (cal.dataset.month || value || ymd(new Date())).split('-').map(Number);
+  cal.dataset.month = `${y}-${pad(m)}`;
+  const first = new Date(y, m - 1, 1);
+  const start = new Date(y, m - 1, 1 - ((first.getDay() + 6) % 7)); // с понедельника
+  const today = ymd(new Date());
+  let cells = '';
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const iso = ymd(d);
+    const cls = [d.getMonth() !== m - 1 && 'out', iso === today && 'today', iso === value && 'sel'].filter(Boolean).join(' ');
+    cells += `<button type="button" class="${cls}" data-dp-day="${iso}">${d.getDate()}</button>`;
+  }
+  cal.innerHTML = `
+    <div class="dp-head">
+      <button type="button" data-dp-nav="-1" aria-label="Предыдущий месяц">‹</button>
+      <b>${MONTHS[m - 1]} ${y}</b>
+      <button type="button" data-dp-nav="1" aria-label="Следующий месяц">›</button>
+    </div>
+    <div class="dp-grid">${['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((w) => `<span>${w}</span>`).join('')}${cells}</div>
+    <div class="dp-foot">
+      <button type="button" data-dp-quick="0">Сегодня</button>
+      <button type="button" data-dp-quick="1">Завтра</button>
+      ${field.dataset.clearable ? '<button type="button" data-dp-quick="clear">Очистить</button>' : ''}
+    </div>`;
+}
+
+function dpPick(field, iso) {
+  field.querySelector('input').value = iso;
+  field.querySelector('.dp').hidden = true;
+  dpSync(field);
+}
+
+function dpClick(e) {
+  const field = e.target.closest('.dp-field');
+  if (!field) return false;
+  const cal = field.querySelector('.dp');
+  if (e.target.closest('[data-dp-toggle]')) {
+    cal.hidden = !cal.hidden;
+    if (!cal.hidden) {
+      delete cal.dataset.month;
+      dpRender(field);
+    }
+    return true;
+  }
+  const nav = e.target.closest('[data-dp-nav]');
+  if (nav) {
+    const [y, m] = cal.dataset.month.split('-').map(Number);
+    const d = new Date(y, m - 1 + Number(nav.dataset.dpNav), 1);
+    cal.dataset.month = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+    dpRender(field);
+    return true;
+  }
+  const day = e.target.closest('[data-dp-day]');
+  if (day) return dpPick(field, day.dataset.dpDay), true;
+  const quick = e.target.closest('[data-dp-quick]');
+  if (quick) {
+    if (quick.dataset.dpQuick === 'clear') return dpPick(field, ''), true;
+    const d = new Date();
+    d.setDate(d.getDate() + Number(quick.dataset.dpQuick));
+    return dpPick(field, ymd(d)), true;
+  }
+  return true;
+}
+
 document.addEventListener('click', async (e) => {
+  if (dpClick(e)) return;
+
   const tab = e.target.closest('[data-tab]');
   if (tab) return showTab(tab.dataset.tab);
 
@@ -695,6 +782,7 @@ async function refresh() {
 (async function init() {
   const d = new Date();
   $('#weight-form').date.value = ymd(d);
+  dpSyncAll($('#weight-form'));
   try {
     hideBought = localStorage.getItem('hideBought') === '1';
     $('#hide-bought').checked = hideBought;
