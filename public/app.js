@@ -146,12 +146,13 @@ function taskStatus(t, done, date) {
 
 function counterHtml(date, t) {
   const n = count(date, t);
-  const { target, steps } = t.counter;
+  const { target, steps, unit } = t.counter;
+  const u = unit ? ` ${esc(unit)}` : '';
   return `<div class="counter">
-    <div class="counter-top"><span class="big">${n}</span><span class="kcal">из ${target}</span></div>
+    <div class="counter-top"><span class="big">${n}${u}</span><span class="kcal">из ${target}${u}</span></div>
     <div class="bar"><span style="width:${Math.min(100, (n / target) * 100)}%"></span></div>
     <div class="counter-btns">
-      <button data-count="${t.id}" data-step="-1">−1</button>
+      <button data-count="${t.id}" data-step="-${steps[0]}">−${steps[0]}</button>
       ${steps.map((st) => `<button data-count="${t.id}" data-step="${st}" class="plus">+${st}</button>`).join('')}
     </div>
   </div>`;
@@ -190,7 +191,7 @@ function renderTodos() {
 
     const badge = (status === 'now' ? '<span class="badge">сейчас</span>' : '') + (t.once ? '<span class="badge soft">разово</span>' : '')
       + (t.days ? `<span class="badge soft">${daysLabel(t.days)}</span>` : '');
-    const countLabel = p.of ? `<span class="kcal">${p.n}/${p.of}</span>` : '';
+    const countLabel = p.of ? `<span class="kcal">${p.n}/${p.of}${t.counter?.unit ? ' ' + esc(t.counter.unit) : ''}</span>` : '';
 
     let body = '';
     if (open) {
