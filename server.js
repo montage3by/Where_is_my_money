@@ -53,9 +53,10 @@ function loadState() {
       checks: s.checks || {}, weights: s.weights || [], counters: s.counters || {}, snapshots: s.snapshots || {},
       routine: s.routine || structuredClone(plan.routine),
       settings: { city: DEFAULT_CITY, ...s.settings },
+      food: s.food || {},
     };
   } catch {
-    return { checks: {}, weights: [], counters: {}, snapshots: {}, routine: structuredClone(plan.routine), settings: { city: DEFAULT_CITY } };
+    return { checks: {}, weights: [], counters: {}, snapshots: {}, routine: structuredClone(plan.routine), settings: { city: DEFAULT_CITY }, food: {} };
   }
 }
 
@@ -229,6 +230,7 @@ async function handleApi(req, res, route) {
       checks: body.checks, counters: body.counters, weights: body.weights, routine: body.routine,
       snapshots: ok(body.snapshots, false) ? body.snapshots : {},
       settings: { city: DEFAULT_CITY, ...(ok(body.settings, false) ? body.settings : {}) },
+      food: ok(body.food, false) ? body.food : {},
     };
   } else if (route === '/api/settings/city') {
     const lat = Number(body.lat);
@@ -237,6 +239,19 @@ async function handleApi(req, res, route) {
     if (!name || !(lat >= -90 && lat <= 90) || !(lon >= -180 && lon <= 180)) return send(res, 400, { error: 'Неверный город' });
     const tz = /^[A-Za-z_]+(\/[A-Za-z_+-]+)*$/.test(String(body.tz)) ? String(body.tz) : 'auto';
     state.settings.city = { name, country: String(body.country || '').slice(0, 80), lat, lon, tz };
+  } else if (route === '/api/food') {
+    // Дневник питания: что съедено на самом деле, по датам
+    const date = String(body.date);
+    const text = String(body.text || '').trim().slice(0, 300);
+    const meal = String(body.meal || '').trim().slice(0, 30);
+    const kcal = body.kcal === '' || body.kcal == null ? null : Math.round(Number(body.kcal));
+    if (!DATE_RE.test(date) || !text || (kcal !== null && !(kcal >= 0 && kcal <= 5000))) return send(res, 400, { error: 'Нужно описание и калории числом' });
+    (state.food[date] = state.food[date] || []).push({ id: crypto.randomBytes(4).toString('hex'), meal, text, kcal, at: new Date().toISOString() });
+  } else if (route === '/api/food/delete') {
+    const list = state.food[String(body.date)];
+    if (!list) return send(res, 404, { error: 'Запись не найдена' });
+    state.food[body.date] = list.filter((x) => x.id !== body.id);
+    if (!state.food[body.date].length) delete state.food[body.date];
   } else if (route === '/api/reset') {
     const prefix = body.scope === 'meals' ? 'meal:' : body.scope === 'shopping' ? 'shop:' : null;
     if (!prefix) return send(res, 400, { error: 'scope must be meals or shopping' });

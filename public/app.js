@@ -384,6 +384,21 @@ async function bumpCounter(taskId, step) {
   }
 }
 
+// ——— Дневник питания: сегодня, что съедено на самом деле ———
+function renderFood() {
+  const today = ymd(new Date());
+  const list = (state.food && state.food[today]) || [];
+  const total = list.reduce((sum, x) => sum + (x.kcal || 0), 0);
+  $('#food-total').textContent = list.length ? `~${total} ккал из ~${plan.summary.kcal}` : '';
+  $('#food-list').innerHTML = list.length
+    ? list.map((x) => `<div class="food-item">
+        <div><span class="kcal">${esc(x.meal)}</span><div>${esc(x.text)}</div></div>
+        <span class="kcal">${x.kcal != null ? '~' + x.kcal : ''}</span>
+        <button data-food-del="${x.id}" aria-label="Удалить">×</button>
+      </div>`).join('')
+    : '<p class="empty">Сегодня пока ничего не записано</p>';
+}
+
 function renderMeals() {
   $('#days').innerHTML = plan.days.map((d, i) => `
     <button class="day${i === todayIdx ? ' today' : ''}" data-day="${i}" aria-pressed="${i === selectedDay}">
@@ -448,6 +463,7 @@ function render() {
   renderTodos();
   renderHistory();
   renderMeals();
+  renderFood();
   renderShop();
   renderWeights();
 }
@@ -527,6 +543,18 @@ document.addEventListener('click', async (e) => {
     return;
   }
 
+  const fdel = e.target.closest('[data-food-del]');
+  if (fdel) {
+    if (!confirm('Удалить запись?')) return;
+    try {
+      await write('/api/food/delete', { date: ymd(new Date()), id: fdel.dataset.foodDel });
+      renderFood();
+    } catch (err) {
+      toast('Ошибка: ' + err.message);
+    }
+    return;
+  }
+
   const del = e.target.closest('[data-del]');
   if (del) {
     if (!confirm('Удалить запись?')) return;
@@ -540,6 +568,18 @@ document.addEventListener('click', async (e) => {
 });
 
 $('#task-form').addEventListener('submit', saveTask);
+$('#food-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = e.target;
+  try {
+    await write('/api/food', { date: ymd(new Date()), meal: f.meal.value, text: f.text.value, kcal: f.kcal.value });
+    f.text.value = '';
+    f.kcal.value = '';
+    renderFood();
+  } catch (err) {
+    toast('Ошибка: ' + err.message);
+  }
+});
 $('#city-q').addEventListener('input', () => {
   clearTimeout(citySearchT);
   citySearchT = setTimeout(searchCities, 350);
