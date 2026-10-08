@@ -1,0 +1,263 @@
+<!-- BUDOVSKY · T123. Вставьте файл целиком один раз. Версия 08.10.2026.
+     Перед публикацией заполните CONFIG внизу; инструкция — README.md.
+     Цена 6800/8900 и подарок подтверждены заказчиком. Сроки/ограничения ещё не заданы.
+     Фотографии и шрифты: официальный сайт клиники. Для автономного владения
+     загрузите их в медиатеку своего проекта и замените URL. -->
+<style>
+@font-face{font-family:BHObject;src:url('https://static.tildacdn.com/tild3738-3763-4161-a664-393338666139/ObjectSans-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:BHObject;src:url('https://static.tildacdn.com/tild6439-3236-4432-a331-666162613265/ObjectSans-Heavy.woff') format('woff');font-weight:700;font-style:normal;font-display:swap}
+#budovsky-hygiene{--bh-brand:#677290;--bh-ink:#293244;--bh-muted:#586174;--bh-soft:#f1f3f6;--bh-line:#dce0e8;font-family:BHObject,Arial,sans-serif;font-size:16px;line-height:1.55;color:var(--bh-ink);background:#fff;text-align:left;isolation:isolate;-webkit-font-smoothing:antialiased}
+#budovsky-hygiene *,#budovsky-hygiene *::before,#budovsky-hygiene *::after{box-sizing:border-box}
+#budovsky-hygiene [hidden]{display:none!important}
+#budovsky-hygiene h1,#budovsky-hygiene h2,#budovsky-hygiene h3,#budovsky-hygiene p,#budovsky-hygiene figure{margin:0;padding:0}
+#budovsky-hygiene h1,#budovsky-hygiene h2,#budovsky-hygiene h3{font-family:inherit;font-weight:400;overflow-wrap:break-word}
+#budovsky-hygiene a{color:inherit;text-decoration:none}
+#budovsky-hygiene a,#budovsky-hygiene summary{-webkit-tap-highlight-color:transparent}
+#budovsky-hygiene a:focus-visible,#budovsky-hygiene summary:focus-visible,#budovsky-hygiene [tabindex]:focus-visible{outline:3px solid #293244;outline-offset:5px;border-radius:5px}
+#budovsky-hygiene img{display:block;max-width:100%;height:auto}
+#budovsky-hygiene svg{display:block;max-width:100%}
+#budovsky-hygiene .bh-wrap{width:min(1280px,calc(100% - 80px));margin-inline:auto}
+#budovsky-hygiene .bh-header{background:var(--bh-brand);color:#fff}
+#budovsky-hygiene .bh-header-inner{min-height:96px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+#budovsky-hygiene .bh-logo{display:block;width:245px;flex-shrink:0}
+#budovsky-hygiene .bh-logo img{width:100%;height:auto}
+#budovsky-hygiene .bh-header-right{display:flex;align-items:center;gap:38px}
+#budovsky-hygiene .bh-header-note{font-size:13px;line-height:1.4}
+#budovsky-hygiene .bh-phone{font-size:19px;white-space:nowrap;display:inline-flex;align-items:center;min-height:44px}
+#budovsky-hygiene .bh-header a:focus-visible{outline-color:#fff}
+#budovsky-hygiene .bh-hero{display:grid;grid-template-columns:1.07fr 1fr;gap:48px;padding-top:44px;padding-bottom:32px;align-items:center}
+#budovsky-hygiene .bh-eyebrow{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--bh-muted);margin-bottom:24px}
+#budovsky-hygiene h1{font-size:clamp(40px,4.35vw,64px);line-height:1.07;letter-spacing:-.045em}
+#budovsky-hygiene .bh-price-line{display:block;color:var(--bh-brand);white-space:nowrap}
+#budovsky-hygiene .bh-old-price{margin-top:12px;color:var(--bh-muted);font-size:17px}
+#budovsky-hygiene del{text-decoration-thickness:1px;text-decoration-color:currentColor}
+#budovsky-hygiene .bh-lead{font-size:17px;line-height:1.6;margin-top:23px;max-width:550px;color:var(--bh-muted)}
+#budovsky-hygiene .bh-gift-pill{display:flex;gap:10px;align-items:center;margin-top:21px;font-size:14px;color:var(--bh-ink)}
+#budovsky-hygiene .bh-gift-icon{width:31px;height:31px;display:grid;place-items:center;background:var(--bh-soft);border-radius:50%;flex-shrink:0}
+#budovsky-hygiene .bh-gift-icon svg{width:17px;height:17px}
+#budovsky-hygiene .bh-btn{display:inline-flex;align-items:center;justify-content:space-between;gap:32px;min-height:58px;padding:16px 25px;border-radius:100px;background:var(--bh-brand);color:#fff!important;font-size:15px;font-weight:700;line-height:1.3;border:1px solid transparent;transition:background .2s,transform .2s;text-align:center}
+#budovsky-hygiene .bh-btn:hover{background:#505e7b;transform:translateY(-2px)}
+#budovsky-hygiene .bh-btn svg{width:20px;height:20px;flex-shrink:0}
+#budovsky-hygiene .bh-hero .bh-btn{margin-top:28px}
+#budovsky-hygiene .bh-address{font-style:normal;font-size:13px;color:var(--bh-muted);margin-top:18px;display:flex;align-items:center;gap:8px}
+#budovsky-hygiene .bh-address svg{width:16px;height:16px;flex-shrink:0}
+#budovsky-hygiene .bh-hero-photo{position:relative;align-self:stretch;min-height:630px;border-radius:24px;overflow:hidden;background:var(--bh-soft)}
+#budovsky-hygiene .bh-hero-photo>img{width:100%;height:100%;position:absolute;inset:0;object-fit:cover;object-position:50% 49%}
+#budovsky-hygiene .bh-photo-label{position:absolute;bottom:20px;left:20px;right:20px;background:rgba(255,255,255,.96);border-radius:14px;padding:17px 20px;font-size:13px;line-height:1.5}
+#budovsky-hygiene .bh-photo-label span{display:block;font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--bh-muted);margin-bottom:3px}
+#budovsky-hygiene .bh-warning{border-top:1px solid var(--bh-line);border-bottom:1px solid var(--bh-line);padding:22px 0;color:var(--bh-muted);font-size:16px;text-align:center}
+#budovsky-hygiene .bh-section{padding-block:88px}
+#budovsky-hygiene .bh-section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:35px;margin-bottom:35px}
+#budovsky-hygiene h2{font-size:clamp(32px,3vw,44px);line-height:1.14;letter-spacing:-.035em}
+#budovsky-hygiene .bh-section-head .bh-eyebrow{margin-bottom:14px}
+#budovsky-hygiene .bh-head-note{max-width:330px;font-size:15px;color:var(--bh-muted)}
+#budovsky-hygiene .bh-services{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}
+#budovsky-hygiene .bh-service{grid-column:span 2;background:var(--bh-soft);border-radius:18px;padding:26px;min-height:195px;display:flex;flex-direction:column}
+#budovsky-hygiene .bh-service:nth-child(n+4){grid-column:span 3;min-height:175px}
+#budovsky-hygiene .bh-num{font-size:12px;color:var(--bh-muted);margin-bottom:22px;letter-spacing:.05em}
+#budovsky-hygiene h3{font-size:21px;line-height:1.25;letter-spacing:-.02em}
+#budovsky-hygiene .bh-service p{font-size:14px;line-height:1.6;color:var(--bh-muted);margin-top:10px;max-width:380px}
+#budovsky-hygiene .bh-service.bh-service-gift{background:#e7ebf2}
+#budovsky-hygiene .bh-small-tag{display:inline-block;font-size:11px;line-height:1.4;letter-spacing:.02em;padding:5px 9px;border:1px solid #bac3d4;border-radius:30px;margin-left:8px;vertical-align:middle;white-space:nowrap}
+#budovsky-hygiene .bh-care{border-top:1px solid var(--bh-line);display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+#budovsky-hygiene .bh-care-photo{border-radius:22px;overflow:hidden;background:var(--bh-soft);aspect-ratio:1.25}
+#budovsky-hygiene .bh-care-photo img{width:100%;height:100%;object-fit:cover;object-position:50% 44%}
+#budovsky-hygiene .bh-care-copy p:not(.bh-eyebrow){color:var(--bh-muted);margin-top:22px;max-width:510px}
+#budovsky-hygiene .bh-care-copy .bh-care-note{font-size:13px;padding-top:20px;border-top:1px solid var(--bh-line)}
+#budovsky-hygiene .bh-gift{display:grid;grid-template-columns:1fr 1.2fr;gap:55px;align-items:center;background:var(--bh-soft);border-radius:24px;padding:48px 60px}
+#budovsky-hygiene .bh-gift-visual{display:flex;align-items:center;justify-content:center;min-height:200px}
+#budovsky-hygiene .bh-gift-visual svg{width:320px;height:auto;color:var(--bh-brand)}
+#budovsky-hygiene .bh-gift .bh-eyebrow{margin-bottom:16px}
+#budovsky-hygiene .bh-gift p:not(.bh-eyebrow){margin-top:20px;color:var(--bh-muted);max-width:420px}
+#budovsky-hygiene .bh-gift h2{font-size:36px}
+#budovsky-hygiene .bh-team{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+#budovsky-hygiene .bh-doctor{min-width:0}
+#budovsky-hygiene .bh-doctor-photo{aspect-ratio:1/1.13;overflow:hidden;border-radius:18px;background:var(--bh-soft)}
+#budovsky-hygiene .bh-doctor-photo img{width:100%;height:100%;object-fit:cover;object-position:center 35%;transition:transform .4s}
+#budovsky-hygiene .bh-doctor:first-child .bh-doctor-photo img{object-position:center 43%}
+#budovsky-hygiene .bh-doctor:hover .bh-doctor-photo img{transform:scale(1.02)}
+#budovsky-hygiene .bh-doctor h3{margin-top:22px;font-size:22px}
+#budovsky-hygiene .bh-doctor h3 span{display:block}
+#budovsky-hygiene .bh-doctor p{margin-top:10px;color:var(--bh-muted);font-size:13px;min-height:41px}
+#budovsky-hygiene .bh-social{font-size:12px;display:inline-flex;align-items:center;min-height:44px;margin-top:6px;text-decoration:underline;text-underline-offset:4px}
+#budovsky-hygiene .bh-steps-section{background:var(--bh-soft)}
+#budovsky-hygiene .bh-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:45px;list-style:none;padding:0;margin:38px 0 0;counter-reset:bh-step}
+#budovsky-hygiene .bh-steps li{counter-increment:bh-step;border-top:1px solid #bcc5d4;padding-top:22px}
+#budovsky-hygiene .bh-steps li::before{content:'0' counter(bh-step);display:block;font-size:12px;color:var(--bh-brand);margin-bottom:20px}
+#budovsky-hygiene .bh-steps p{font-size:14px;color:var(--bh-muted);margin-top:12px}
+#budovsky-hygiene .bh-faq{display:grid;grid-template-columns:.85fr 1.35fr;gap:65px}
+#budovsky-hygiene .bh-faq details{border-bottom:1px solid var(--bh-line)}
+#budovsky-hygiene .bh-faq details:first-child{border-top:1px solid var(--bh-line)}
+#budovsky-hygiene .bh-faq summary{font-size:17px;line-height:1.45;padding:23px 38px 23px 0;cursor:pointer;list-style:none;position:relative}
+#budovsky-hygiene .bh-faq summary::-webkit-details-marker{display:none}
+#budovsky-hygiene .bh-faq summary::after{content:'+';position:absolute;right:4px;top:19px;font-size:25px;color:var(--bh-brand)}
+#budovsky-hygiene .bh-faq details[open] summary::after{content:'−'}
+#budovsky-hygiene .bh-faq-list{margin:0 0 18px;padding:0 24px 0 22px;font-size:14px;color:var(--bh-muted);list-style:disc}
+#budovsky-hygiene .bh-faq-list li{margin:0 0 8px;padding:0}
+#budovsky-hygiene .bh-faq details p{font-size:14px;color:var(--bh-muted);padding:0 30px 25px 0}
+#budovsky-hygiene .bh-final{background:var(--bh-brand);color:#fff;border-radius:24px;padding:56px;display:grid;grid-template-columns:1.2fr 1fr;gap:50px;align-items:center}
+#budovsky-hygiene .bh-final .bh-eyebrow{color:#fff;opacity:.85;margin-bottom:18px}
+#budovsky-hygiene .bh-final h2{font-size:43px}
+#budovsky-hygiene .bh-final p:not(.bh-eyebrow){font-size:14px;margin-top:18px;max-width:470px}
+#budovsky-hygiene .bh-final-price{font-size:46px;letter-spacing:-.04em;white-space:nowrap;line-height:1.2}
+#budovsky-hygiene .bh-final-price del{font-size:21px;opacity:.8;margin-left:14px;letter-spacing:-.02em}
+#budovsky-hygiene .bh-final .bh-btn{background:#fff;color:var(--bh-ink)!important;margin-top:24px}
+#budovsky-hygiene .bh-final .bh-btn:hover{background:#edf0f5}
+#budovsky-hygiene .bh-final a:focus-visible{outline-color:#fff}
+#budovsky-hygiene .bh-booking-fallback{margin-top:24px;border-top:1px solid rgba(255,255,255,.3);padding-top:20px}
+#budovsky-hygiene .bh-booking-fallback .bh-phone{font-size:21px;text-decoration:underline;text-underline-offset:5px}
+#budovsky-hygiene .bh-booking-fallback:target{outline:2px solid #fff;outline-offset:8px;border-radius:6px}
+#budovsky-hygiene .bh-footer{padding-top:45px;padding-bottom:32px}
+#budovsky-hygiene .bh-footer-top{display:flex;justify-content:space-between;gap:28px;padding-bottom:32px}
+#budovsky-hygiene .bh-legal{font-size:12px;color:var(--bh-muted);margin-top:12px}
+#budovsky-hygiene .bh-footer-title{font-size:19px;margin-bottom:8px}
+#budovsky-hygiene .bh-footer address{font-style:normal;font-size:14px;color:var(--bh-muted)}
+#budovsky-hygiene .bh-footer-email{font-size:13px;text-decoration:underline;text-underline-offset:4px;display:inline-flex;min-height:44px;align-items:center;overflow-wrap:anywhere}
+#budovsky-hygiene .bh-docs{display:flex;flex-wrap:wrap;gap:8px 24px;border-top:1px solid var(--bh-line);padding-top:20px}
+#budovsky-hygiene .bh-docs a{font-size:12px;color:var(--bh-muted);text-decoration:underline;text-underline-offset:4px;min-height:32px;display:inline-flex;align-items:center}
+#budovsky-hygiene .bh-warning-bottom{background:var(--bh-soft);padding:30px 20px;color:var(--bh-muted);font-size:19px;text-align:center;line-height:1.5}
+#budovsky-hygiene .bh-offer-terms{font-size:13px;margin-top:20px;color:var(--bh-muted)}
+@media(min-width:1600px){#budovsky-hygiene .bh-hero{gap:60px}}
+@media(max-width:1100px){#budovsky-hygiene .bh-wrap{width:calc(100% - 48px)}#budovsky-hygiene .bh-hero{gap:30px}#budovsky-hygiene .bh-header-note{display:none}#budovsky-hygiene .bh-hero-photo{min-height:620px}#budovsky-hygiene .bh-care{gap:36px}#budovsky-hygiene .bh-gift{padding:36px;gap:28px}#budovsky-hygiene .bh-final{padding:38px;gap:30px}#budovsky-hygiene .bh-final h2{font-size:37px}}
+@media(max-width:800px){#budovsky-hygiene .bh-header-inner{min-height:80px}#budovsky-hygiene .bh-logo{width:205px}#budovsky-hygiene .bh-phone{font-size:16px}#budovsky-hygiene .bh-hero{gap:24px;grid-template-columns:1.1fr .9fr}#budovsky-hygiene h1{font-size:40px}#budovsky-hygiene .bh-lead{font-size:15px}#budovsky-hygiene .bh-hero-photo{min-height:580px}#budovsky-hygiene .bh-section{padding-block:64px}#budovsky-hygiene .bh-service{padding:22px;grid-column:span 3}#budovsky-hygiene .bh-service:last-child{grid-column:span 6}#budovsky-hygiene .bh-care{gap:30px}#budovsky-hygiene .bh-care-photo{aspect-ratio:.8}#budovsky-hygiene .bh-gift h2{font-size:30px}#budovsky-hygiene .bh-team{gap:16px}#budovsky-hygiene .bh-doctor h3{font-size:18px}#budovsky-hygiene .bh-steps{gap:25px}#budovsky-hygiene .bh-faq{gap:30px;grid-template-columns:.8fr 1.2fr}#budovsky-hygiene .bh-final{grid-template-columns:1fr 1fr}#budovsky-hygiene .bh-final h2{font-size:31px}#budovsky-hygiene .bh-final-price{font-size:37px}#budovsky-hygiene .bh-final-price del{font-size:18px;margin-left:8px}}
+@media(max-width:640px){#budovsky-hygiene .bh-wrap{width:calc(100% - 36px)}#budovsky-hygiene .bh-header-inner{min-height:72px;gap:12px}#budovsky-hygiene .bh-logo{width:154px}#budovsky-hygiene .bh-header .bh-phone{font-size:12px}#budovsky-hygiene .bh-hero{grid-template-columns:1fr;padding-top:30px;padding-bottom:24px;gap:28px}#budovsky-hygiene .bh-eyebrow{font-size:10px;letter-spacing:.1em;margin-bottom:18px}#budovsky-hygiene h1{font-size:clamp(36px,9.8vw,53px);line-height:1.08}#budovsky-hygiene .bh-old-price{font-size:14px;margin-top:9px}#budovsky-hygiene .bh-lead{font-size:14px;margin-top:17px;line-height:1.55}#budovsky-hygiene .bh-gift-pill{font-size:12px;margin-top:16px;gap:8px}#budovsky-hygiene .bh-btn{width:100%;font-size:14px;min-height:56px;padding-inline:23px}#budovsky-hygiene .bh-hero .bh-btn{margin-top:21px}#budovsky-hygiene .bh-address{font-size:11px;margin-top:14px}#budovsky-hygiene .bh-hero-photo{min-height:0;height:340px;border-radius:18px}#budovsky-hygiene .bh-hero-photo>img{object-position:50% 46%}#budovsky-hygiene .bh-photo-label{padding:12px 14px;bottom:14px;left:14px;right:14px;font-size:12px}#budovsky-hygiene .bh-warning{padding:18px 4px;font-size:13px}#budovsky-hygiene .bh-section{padding-block:48px}#budovsky-hygiene h2{font-size:31px}#budovsky-hygiene .bh-section-head{display:block;margin-bottom:25px}#budovsky-hygiene .bh-head-note{margin-top:15px;font-size:14px}#budovsky-hygiene .bh-services{grid-template-columns:1fr;gap:10px}#budovsky-hygiene .bh-service,#budovsky-hygiene .bh-service:nth-child(n+4){grid-column:auto;min-height:0;padding:21px}#budovsky-hygiene .bh-num{margin-bottom:13px}#budovsky-hygiene h3{font-size:20px}#budovsky-hygiene .bh-service p{font-size:13px;margin-top:8px}#budovsky-hygiene .bh-care{grid-template-columns:1fr;gap:26px}#budovsky-hygiene .bh-care-photo{aspect-ratio:1.25}#budovsky-hygiene .bh-care-copy p:not(.bh-eyebrow){font-size:14px;margin-top:18px}#budovsky-hygiene .bh-care-copy .bh-care-note{font-size:12px!important}#budovsky-hygiene .bh-gift{grid-template-columns:1fr;padding:27px;gap:18px;border-radius:18px}#budovsky-hygiene .bh-gift-visual{min-height:130px}#budovsky-hygiene .bh-gift-visual svg{width:210px}#budovsky-hygiene .bh-gift h2{font-size:29px}#budovsky-hygiene .bh-gift p:not(.bh-eyebrow){font-size:14px;margin-top:15px}#budovsky-hygiene .bh-team{grid-template-columns:1fr;gap:32px}#budovsky-hygiene .bh-doctor-photo{aspect-ratio:1/1.04}#budovsky-hygiene .bh-doctor h3{font-size:23px;margin-top:18px}#budovsky-hygiene .bh-doctor p{min-height:0}#budovsky-hygiene .bh-steps{grid-template-columns:1fr;gap:25px;margin-top:28px}#budovsky-hygiene .bh-steps li::before{margin-bottom:12px}#budovsky-hygiene .bh-steps p{font-size:13px;margin-top:8px}#budovsky-hygiene .bh-faq{grid-template-columns:1fr;gap:25px}#budovsky-hygiene .bh-faq summary{font-size:15px;padding-block:21px}#budovsky-hygiene .bh-faq details p{font-size:13px;padding-right:12px}#budovsky-hygiene .bh-final{grid-template-columns:1fr;padding:29px 24px;gap:25px;border-radius:18px}#budovsky-hygiene .bh-final h2{font-size:32px}#budovsky-hygiene .bh-final-price{font-size:43px}#budovsky-hygiene .bh-final-price del{font-size:20px;margin-left:13px}#budovsky-hygiene .bh-final .bh-btn{margin-top:20px}#budovsky-hygiene .bh-footer-top{display:block}#budovsky-hygiene .bh-footer-contact{margin-top:18px}#budovsky-hygiene .bh-footer{padding-top:32px}#budovsky-hygiene .bh-docs{gap:7px 20px}#budovsky-hygiene .bh-warning-bottom{font-size:15px;padding:25px 18px}}
+@media(prefers-reduced-motion:reduce){#budovsky-hygiene *,#budovsky-hygiene *::before,#budovsky-hygiene *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}#budovsky-hygiene .bh-btn:hover,#budovsky-hygiene .bh-doctor:hover .bh-doctor-photo img{transform:none}}
+</style>
+
+<div id="budovsky-hygiene" lang="ru">
+  <header class="bh-header">
+    <div class="bh-wrap bh-header-inner">
+      <a class="bh-logo" href="https://budovsky-dent.ru/" aria-label="BUDOVSKY — официальный сайт клиники"><img src="https://static.tildacdn.com/tild6631-3333-4130-b335-386563613330/Group.png" width="300" height="49" alt="BUDOVSKY"></a>
+      <div class="bh-header-right"><span class="bh-header-note">Клиника доктора Будовского<br>Санкт-Петербург</span><a class="bh-phone" data-bh-phone data-place="header" href="tel:+78126023774">+7 (812) 602-37-74</a></div>
+    </div>
+  </header>
+  <main>
+    <section class="bh-wrap bh-hero" aria-labelledby="bh-title">
+      <div>
+        <p class="bh-eyebrow">BUDOVSKY · Санкт-Петербург</p>
+        <h1 id="bh-title">Профессиональная<br>чистка зубов <span class="bh-price-line">за 6 800 ₽</span></h1>
+        <p class="bh-old-price">вместо <del>8 900 ₽</del></p>
+        <p class="bh-lead">Ультразвуковая чистка, AirFlow и полировка. Консультация терапевта с составлением плана лечения — в составе комплекса.</p>
+        <p class="bh-gift-pill"><span class="bh-gift-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 10h16v11H4zM3 6h18v4H3zM12 6v15M12 6C4 7 5 0 9 3l3 3Zm0 0c8 1 7-6 3-3l-3 3Z"/></svg></span>Каппа с укрепляющим гелем — в подарок</p>
+        <a class="bh-btn" data-bh-book data-place="hero" href="#bh-booking">Записаться на чистку <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h15M13 5l7 7-7 7"/></svg></a>
+        <address class="bh-address"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 0 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>Санкт-Петербург, Московский проспект, 37</address>
+      </div>
+      <figure class="bh-hero-photo"><img src="https://static.tildacdn.com/tild3333-3831-4330-b266-376165383436/_84A3223.jpg" alt="Стоматологический кабинет BUDOVSKY" width="810" height="1213" fetchpriority="high"><figcaption class="bh-photo-label"><span>Знакомое место для заботы о себе</span>Клиника доктора Будовского · Московский, 37</figcaption></figure>
+    </section>
+    <div class="bh-wrap bh-warning">Имеются противопоказания. Необходима консультация специалиста.</div>
+    <section class="bh-wrap bh-section" aria-labelledby="bh-included-title">
+      <div class="bh-section-head"><div><p class="bh-eyebrow">Состав комплекса</p><h2 id="bh-included-title">Что входит в 6 800 ₽</h2></div><p class="bh-head-note">Пять составляющих комплекса — от чистки до разговора с врачом.</p></div>
+      <ol class="bh-services">
+        <li class="bh-service"><span class="bh-num" aria-hidden="true">01 / ЧИСТКА</span><h3>Ультразвуковая чистка</h3><p>Профессиональная чистка зубов с помощью ультразвука.</p></li>
+        <li class="bh-service"><span class="bh-num" aria-hidden="true">02 / AIRFLOW</span><h3>Обработка AirFlow</h3><p>Пескоструйная обработка — отдельный этап комплекса.</p></li>
+        <li class="bh-service"><span class="bh-num" aria-hidden="true">03 / ПОЛИРОВКА</span><h3>Полировка с пастой</h3><p>Полировка поверхности зубов после чистки.</p></li>
+        <li class="bh-service bh-service-gift"><span class="bh-num" aria-hidden="true">04 / ДОПОЛНЕНИЕ К УХОДУ</span><h3>Каппа с укрепляющим гелем <span class="bh-small-tag">В подарок</span></h3><p>Включена в предложение по профессиональной гигиене.</p></li>
+        <li class="bh-service"><span class="bh-num" aria-hidden="true">05 / ВНИМАНИЕ ВРАЧА</span><h3>Консультация терапевта</h3><p>Обсудите состояние зубов и дальнейшее лечение. Составление плана лечения входит в комплекс.</p></li>
+      </ol>
+      <!-- После согласования CONFIG.offerTerms покажет реальные сроки и ограничения. -->
+      <p class="bh-offer-terms" data-bh-terms hidden></p>
+    </section>
+    <section class="bh-wrap bh-section bh-care" aria-labelledby="bh-care-title">
+      <figure class="bh-care-photo"><img src="ВСТАВЬТЕ_ССЫЛКУ_НА_ФОТО_ИЗ_ТИЛЬДЫ" alt="Осмотр зубов с помощью стоматологического зеркала" width="1333" height="2000" loading="lazy" decoding="async"></figure>
+      <div class="bh-care-copy"><p class="bh-eyebrow">Больше внимания, больше ясности</p><h2 id="bh-care-title">Внимание<br>к здоровью зубов</h2><p>Чистка — повод уделить время не только уходу, но и вопросам, которые вы хотели задать стоматологу.</p><p>В комплекс входит консультация терапевта с составлением плана лечения. Вы сможете обсудить с врачом состояние зубов и дальнейшие шаги.</p><p class="bh-care-note">Снимки, КТ, дополнительные исследования и само лечение в стоимость комплекса не входят.</p></div>
+    </section>
+    <section class="bh-wrap bh-gift" aria-labelledby="bh-gift-title">
+      <!-- Декоративная авторская схема, не фотография изделия. Для реального фото
+           замените содержимое .bh-gift-visual на img с URL из медиатеки Tilda. -->
+      <div class="bh-gift-visual" aria-hidden="true"><svg viewBox="0 0 360 220" fill="none"><circle cx="160" cy="110" r="98" stroke="currentColor" opacity=".12"/><circle cx="160" cy="110" r="76" stroke="currentColor" opacity=".1"/><path d="M46 107c0-19 13-27 25-13l32 38c12 15 39 15 52 0l32-38c12-14 25-6 25 13v31c0 37-35 59-83 59s-83-22-83-59v-31Z" fill="white" stroke="currentColor" stroke-width="2"/><path d="M61 111v26c0 29 29 45 68 45s68-16 68-45v-26M77 130v29m21-9v24m31-18v25m30-31v24m21-44v29" stroke="currentColor" stroke-width="1.5" opacity=".55"/><g transform="rotate(12 270 99)"><path d="M240 32h64l-7 123h-50L240 32Z" fill="white" stroke="currentColor" stroke-width="2"/><path d="M240 42h64M247 143h50M250 155h43v20h-43z" stroke="currentColor" stroke-width="2"/><path d="M261 85h22m-11-11v22" stroke="currentColor" stroke-width="2"/><path d="M255 114h34m-29 8h24" stroke="currentColor" opacity=".45"/></g><path d="M221 11v17m-8-8h17" stroke="currentColor" stroke-width="1.5"/></svg></div>
+      <div><p class="bh-eyebrow">В составе предложения</p><h2 id="bh-gift-title">Каппа с укрепляющим<br>гелем — в подарок</h2><p>Дополнение к комплексу профессиональной гигиены за 6 800 ₽.</p><p data-bh-gift-price hidden>Стоимость отдельно — 2 100 ₽. В составе предложения — в подарок.</p></div>
+    </section>
+    <section class="bh-wrap bh-section" aria-labelledby="bh-team-title">
+      <div class="bh-section-head"><div><p class="bh-eyebrow">Личное знакомство</p><h2 id="bh-team-title">Специалисты</h2></div><p class="bh-head-note">Профессиональную гигиену проводят стоматологи-терапевты клиники.</p></div>
+      <div class="bh-team">
+        <article class="bh-doctor"><div class="bh-doctor-photo"><img src="https://static.tildacdn.com/tild3038-6530-4230-b937-373765316230/42042463.png" alt="Попадиус Анна Анатольевна" width="1026" height="1538" loading="lazy" decoding="async"></div><h3>Попадиус <span>Анна Анатольевна</span></h3><p>Врач-стоматолог-терапевт</p><a class="bh-social" href="https://www.instagram.com/annapopadius/" target="_blank" rel="noopener noreferrer" aria-label="Instagram Анны Попадиус — откроется в новой вкладке">Instagram ↗</a></article>
+        <article class="bh-doctor"><div class="bh-doctor-photo"><img src="https://static.tildacdn.com/tild3263-3365-4563-a537-316464366534/Frame_302.jpg" alt="Кузьмина Екатерина Александровна" width="400" height="560" loading="lazy" decoding="async"></div><h3>Кузьмина <span>Екатерина Александровна</span></h3><p>Врач-стоматолог-терапевт</p><a class="bh-social" href="https://www.instagram.com/katushamarmeladka/" target="_blank" rel="noopener noreferrer" aria-label="Instagram Екатерины Кузьминой — откроется в новой вкладке">Instagram ↗</a></article>
+        <article class="bh-doctor"><div class="bh-doctor-photo"><img src="https://static.tildacdn.com/tild3934-6431-4731-b066-343336623236/noroot.png" alt="Неронов Артём Александрович" width="422" height="479" loading="lazy" decoding="async"></div><h3>Неронов <span>Артём Александрович</span></h3><p>Врач-стоматолог-терапевт<br>Эндодонтист</p><a class="bh-social" href="https://www.instagram.com/artyomneronov/" target="_blank" rel="noopener noreferrer" aria-label="Instagram Артёма Неронова — откроется в новой вкладке">Instagram ↗</a></article>
+      </div>
+    </section>
+    <section class="bh-steps-section" aria-labelledby="bh-steps-title"><div class="bh-wrap bh-section"><p class="bh-eyebrow">От заявки до приёма</p><h2 id="bh-steps-title">Как записаться</h2><ol class="bh-steps"><li><h3>Оставьте заявку</h3><p>Нажмите «Записаться на чистку», чтобы связаться с клиникой.</p></li><li><h3>Согласуйте время</h3><p>Администратор поможет выбрать время и ответит на вопросы о записи.</p></li><li><h3>Приходите на приём</h3><p>Ждём вас в Санкт-Петербурге, на Московском проспекте, 37.</p></li></ol></div></section>
+    <section class="bh-wrap bh-section bh-faq" aria-labelledby="bh-faq-title"><div><p class="bh-eyebrow">Перед посещением</p><h2 id="bh-faq-title">Ответы<br>на ваши вопросы</h2></div><div>
+      <details><summary>Что входит в стоимость 6 800 ₽?</summary><ul class="bh-faq-list"><li>Ультразвуковая чистка</li><li>Пескоструйная обработка AirFlow</li><li>Полировка с пастой</li><li>Каппа с укрепляющим гелем</li><li>Консультация стоматолога-терапевта с составлением плана лечения.</li></ul><p>Стоимость всего комплекса — 6 800 ₽ вместо 8 900 ₽.</p></details>
+      <details><summary>Нужно ли доплачивать за консультацию?</summary><p>Нет, консультация терапевта с составлением плана лечения включена в 6 800 ₽. Снимки, КТ, дополнительные исследования и лечение не входят в эту стоимость.</p></details>
+      <details><summary>Каппа с гелем действительно в подарок?</summary><p>Да. Каппа с укрепляющим гелем входит в это предложение без дополнительной оплаты.</p></details>
+      <details><summary>Как подтвердить запись?</summary><p>Оставьте заявку или позвоните в клинику. Администратор согласует с вами дату и время. Отправленная заявка сама по себе не подтверждает запись на приём.</p></details>
+    </div></section>
+    <section class="bh-wrap bh-final" aria-labelledby="bh-final-title"><div><p class="bh-eyebrow">BUDOVSKY · Санкт-Петербург</p><h2 id="bh-final-title">Время позаботиться<br>о своей улыбке</h2><p>Профессиональная чистка, консультация терапевта и каппа с укрепляющим гелем в подарок.</p></div><div><div class="bh-final-price">6 800 ₽ <del>8 900 ₽</del></div><a class="bh-btn" data-bh-book data-place="final" href="#bh-booking">Записаться на чистку <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h15M13 5l7 7-7 7"/></svg></a><div id="bh-booking" class="bh-booking-fallback" tabindex="-1"><p>Запись по телефону</p><a class="bh-phone" data-bh-phone data-place="booking" href="tel:+78126023774">+7 (812) 602-37-74</a></div></div></section>
+  </main>
+  <footer class="bh-wrap bh-footer"><div class="bh-footer-top"><div><div class="bh-footer-title">Клиника доктора Будовского</div><address>Санкт-Петербург, Московский проспект, 37</address><p class="bh-legal">ООО «МАРШАЛ» · ОГРН 1097847258574</p></div><div class="bh-footer-contact"><a class="bh-phone" data-bh-phone data-place="footer" href="tel:+78126023774">+7 (812) 602-37-74</a><br><a class="bh-footer-email" href="mailto:reception@budovsky-dent.ru">reception@budovsky-dent.ru</a></div></div><nav class="bh-docs" aria-label="Документы клиники"><a href="https://budovsky-dent.ru/doc" target="_blank" rel="noopener noreferrer">Лицензии</a><a href="https://budovsky-dent.ru/companydetails" target="_blank" rel="noopener noreferrer">Реквизиты</a><a href="https://budovsky-dent.ru/documents" target="_blank" rel="noopener noreferrer">Документы для пациентов</a><a href="https://budovsky-dent.ru/privacy" target="_blank" rel="noopener noreferrer">Политика обработки персональных данных</a></nav></footer>
+  <div class="bh-warning-bottom">Имеются противопоказания.<br>Необходима консультация специалиста.</div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  /* ОБЯЗАТЕЛЬНЫЕ НАСТРОЙКИ ПЕРЕД ПУБЛИКАЦИЕЙ.
+     Пустой bookingUrl оставляет честный переход к телефону.
+     Для штатного popup: bookingUrl: '#popup:budovsky-hygiene'.
+     formSelector: '#rec123456789 form' — только ваша форма, не все формы сайта.
+     Получателя и согласие на ПД настройте в Tilda, не в этом фрагменте. */
+  var CONFIG = {
+    bookingUrl: '',
+    formSelector: '',
+    metrikaId: 0,
+    offerTerms: '', // Только утверждённые сроки, аудитория и ограничения.
+    giftSeparatePriceConfirmed: false // true только после подтверждения 2 100 ₽.
+  };
+  var root = document.getElementById('budovsky-hygiene');
+  if (!root || root.dataset.bhReady) return;
+  root.dataset.bhReady = 'true';
+  var destination = CONFIG.bookingUrl.trim();
+  var validDestination = /^#popup:[a-zA-Z0-9_-]+$/.test(destination) || /^https:\/\//.test(destination);
+  if (destination && !validDestination) console.warn('BUDOVSKY: проверьте bookingUrl. Оставлен переход к телефону.');
+  root.querySelectorAll('[data-bh-book]').forEach(function (link) {
+    if (validDestination) link.setAttribute('href', destination);
+  });
+  if (CONFIG.offerTerms.trim()) {
+    var terms = root.querySelector('[data-bh-terms]');
+    terms.textContent = CONFIG.offerTerms.trim();
+    terms.hidden = false;
+  }
+  root.querySelector('[data-bh-gift-price]').hidden = !CONFIG.giftSeparatePriceConfirmed;
+  function track(goal, placement) {
+    /* Только фиксированные технические метки. Не читаем поля форм, URL,
+       телефон посетителя, имя, email и сведения о здоровье. Счётчик и
+       управление согласием на аналитику подключаются отдельно в Tilda. */
+    if (Number(CONFIG.metrikaId) > 0 && typeof window.ym === 'function') {
+      window.ym(Number(CONFIG.metrikaId), 'reachGoal', goal, {placement: placement});
+    }
+  }
+  root.addEventListener('click', function (event) {
+    var link = event.target.closest('a');
+    if (!link || !root.contains(link)) return;
+    if (link.hasAttribute('data-bh-book')) {
+      track('bh_booking_click', link.dataset.place || 'page');
+      if (link.getAttribute('href') === '#bh-booking') {
+        event.preventDefault();
+        var target = root.querySelector('#bh-booking');
+        target.scrollIntoView({behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'center'});
+        target.focus({preventScroll:true});
+      }
+    }
+    if (link.hasAttribute('data-bh-phone')) track('bh_phone_click', link.dataset.place || 'page');
+  });
+  function bindForm() {
+    if (!CONFIG.formSelector.trim()) return;
+    var forms;
+    try { forms = document.querySelectorAll(CONFIG.formSelector); }
+    catch (error) { console.warn('BUDOVSKY: неверный formSelector.'); return; }
+    forms.forEach(function (form) {
+      if (form.tagName !== 'FORM' || form.dataset.bhTracked) return;
+      form.dataset.bhTracked = 'true';
+      /* Документированное событие Tilda после успешной отправки.
+         Не submit и не нажатие кнопки. Слушатель только native: без двойной
+         подписки через jQuery. Не создаём собственное сообщение об успехе. */
+      form.addEventListener('tildaform:aftersuccess', function () {
+        track('bh_form_success', 'hygiene_form');
+      });
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindForm, {once:true});
+  else bindForm();
+  window.addEventListener('load', bindForm, {once:true});
+})();
+</script>
