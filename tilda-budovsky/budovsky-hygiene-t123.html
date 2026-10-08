@@ -133,7 +133,7 @@
         <p class="bh-old-price">вместо <del>8 900 ₽</del></p>
         <p class="bh-lead">Ультразвуковая чистка, AirFlow и полировка. Консультация терапевта с составлением плана лечения — в составе комплекса.</p>
         <p class="bh-gift-pill"><span class="bh-gift-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 10h16v11H4zM3 6h18v4H3zM12 6v15M12 6C4 7 5 0 9 3l3 3Zm0 0c8 1 7-6 3-3l-3 3Z"/></svg></span>Каппа с укрепляющим гелем — в подарок</p>
-        <a class="bh-btn" data-bh-book data-place="hero" href="#bh-booking">Записаться на чистку <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h15M13 5l7 7-7 7"/></svg></a>
+        <a class="bh-btn" data-bh-book data-place="hero" href="#popup:stepform">Записаться на чистку <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h15M13 5l7 7-7 7"/></svg></a>
         <address class="bh-address"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 0 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>Санкт-Петербург, Московский проспект, 37</address>
       </div>
       <figure class="bh-hero-photo"><img src="https://static.tildacdn.com/tild3333-3831-4330-b266-376165383436/_84A3223.jpg" alt="Стоматологический кабинет BUDOVSKY" width="810" height="1213" fetchpriority="high"><figcaption class="bh-photo-label"><span>Знакомое место для заботы о себе</span>Клиника доктора Будовского · Московский, 37</figcaption></figure>
@@ -176,7 +176,7 @@
       <details><summary>Каппа с гелем действительно в подарок?</summary><p>Да. Каппа с укрепляющим гелем входит в это предложение без дополнительной оплаты.</p></details>
       <details><summary>Как подтвердить запись?</summary><p>Оставьте заявку или позвоните в клинику. Администратор согласует с вами дату и время. Отправленная заявка сама по себе не подтверждает запись на приём.</p></details>
     </div></section>
-    <section class="bh-wrap bh-final" aria-labelledby="bh-final-title"><div><p class="bh-eyebrow">BUDOVSKY · Санкт-Петербург</p><h2 id="bh-final-title">Время позаботиться<br>о своей улыбке</h2><p>Профессиональная чистка, консультация терапевта и каппа с укрепляющим гелем в подарок.</p></div><div><div class="bh-final-price">6 800 ₽ <del>8 900 ₽</del></div><a class="bh-btn" data-bh-book data-place="final" href="#bh-booking">Записаться на чистку <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h15M13 5l7 7-7 7"/></svg></a><div id="bh-booking" class="bh-booking-fallback" tabindex="-1"><p>Запись по телефону</p><a class="bh-phone" data-bh-phone data-place="booking" href="tel:+78126023774">+7 (812) 602-37-74</a></div></div></section>
+    <section class="bh-wrap bh-final" aria-labelledby="bh-final-title"><div><p class="bh-eyebrow">BUDOVSKY · Санкт-Петербург</p><h2 id="bh-final-title">Время позаботиться<br>о своей улыбке</h2><p>Профессиональная чистка, консультация терапевта и каппа с укрепляющим гелем в подарок.</p></div><div><div class="bh-final-price">6 800 ₽ <del>8 900 ₽</del></div><a class="bh-btn" data-bh-book data-place="final" href="#popup:stepform">Записаться на чистку <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h15M13 5l7 7-7 7"/></svg></a><div id="bh-booking" class="bh-booking-fallback" tabindex="-1"><p>Запись по телефону</p><a class="bh-phone" data-bh-phone data-place="booking" href="tel:+78126023774">+7 (812) 602-37-74</a></div></div></section>
   </main>
   <div class="bh-warning-bottom">Имеются противопоказания.<br>Необходима консультация специалиста.</div>
 </div>
@@ -190,7 +190,7 @@
      formSelector: '#rec123456789 form' — только ваша форма, не все формы сайта.
      Получателя и согласие на ПД настройте в Tilda, не в этом фрагменте. */
   var CONFIG = {
-    bookingUrl: '',
+    bookingUrl: '#popup:stepform',
     formSelector: '',
     metrikaId: 0,
     offerTerms: '', // Только утверждённые сроки, аудитория и ограничения.
