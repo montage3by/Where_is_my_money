@@ -1,0 +1,54 @@
+*{font-variant-numeric:lining-nums}
+/* Sunrock Residences slide system — colours and type from the Aug 2025 brochure */
+@font-face{font-family:PF;src:url(assets/Playfair-400.ttf);font-weight:400}
+@font-face{font-family:PF;src:url(assets/Playfair-500.ttf);font-weight:500}
+@font-face{font-family:SS;src:url(assets/SourceSans-300.ttf);font-weight:300}
+@font-face{font-family:SS;src:url(assets/SourceSans-400.ttf);font-weight:400}
+@font-face{font-family:SS;src:url(assets/SourceSans-600.ttf);font-weight:600}
+@font-face{font-family:SS;src:url(assets/SourceSans-700.ttf);font-weight:700}
+@font-face{font-family:I;src:url(/usr/share/fonts/opentype/inter/Inter-SemiBold.otf);font-weight:600}
+@font-face{font-family:I;src:url(/usr/share/fonts/opentype/inter/Inter-Regular.otf);font-weight:400}
+@page{size:1920px 1080px;margin:0}
+:root{
+  --green:#2C5040; --green-d:#284A3A; --gold:#B17F4A; --gold-l:#D9C3A6; --sand:#F7F2EB;
+  --ink:#2B3A33; --muted:#7A7F78; --line:#E6DCCF; --paper:#FFFFFF;
+  --ok:#2C5040; --no:#A3483B; --maybe:#B17F4A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--paper)}
+body{font-family:SS,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+.slide{width:1920px;height:1080px;position:relative;overflow:hidden;background:var(--paper);page-break-after:always}
+
+/* page furniture, as on every brochure spread */
+.slide .runner{position:absolute;left:80px;top:46px;font-size:17px;letter-spacing:2.5px;color:var(--gold);text-transform:uppercase}
+.slide .emb{position:absolute;right:80px;top:40px;width:66px}
+h1{position:absolute;left:80px;top:96px;font-family:PF;font-weight:400;font-size:70px;line-height:1.05;color:var(--gold);text-transform:uppercase;letter-spacing:.5px}
+h1 .s{font-family:SS;font-weight:300;letter-spacing:1px}
+.sub{position:absolute;left:82px;top:186px;font-size:28px;font-weight:300;color:var(--gold)}
+.cap{font-size:20px;color:var(--gold);letter-spacing:.3px}
+.note{position:absolute;left:80px;bottom:54px;font-size:21px;color:var(--muted);max-width:1300px;font-weight:400}
+
+/* platform logos, bottom-right like the original report */
+.plat{position:absolute;right:80px;bottom:44px}
+.plat img{display:block}
+
+/* screenshots */
+.shot{position:absolute;left:80px;display:block}
+.shot img{display:block;width:100%;height:auto}
+.shot.frame{outline:1px solid var(--line)}
+
+/* covers: photo half + green pattern half, like the brochure opening spread */
+.cover{background:var(--green)}
+.cover .photo{position:absolute;left:0;top:0;width:960px;height:1080px;background-size:cover;background-position:center}
+.cover .panel{position:absolute;left:960px;top:0;width:960px;height:1080px;background:url(assets/cover_bg.jpg) 50% 50%/1920px 1080px}
+.cover .panel .inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--gold)}
+.cover .kick{font-family:PF;font-size:56px;line-height:1.15;text-transform:uppercase;letter-spacing:1px;max-width:760px}
+.cover .kick .s{font-family:SS;font-weight:300;letter-spacing:2px}
+.cover .logo{width:330px;margin:70px 0 64px}
+.cover .date{font-size:30px;font-weight:400;color:var(--gold-l);letter-spacing:3px;text-transform:uppercase}
+.cover .agency{position:absolute;right:46px;top:40px;width:62px;opacity:.9}
+
+/* closing image slide */
+.closing{background-size:cover;background-position:center}
+.closing .veil{position:absolute;inset:0;background:linear-gradient(90deg,rgba(44,80,64,.92) 0,rgba(44,80,64,.75) 30%,rgba(44,80,64,0) 62%)}
+.closing .logo{position:absolute;left:140px;top:50%;transform:translateY(-50%);width:420px}
