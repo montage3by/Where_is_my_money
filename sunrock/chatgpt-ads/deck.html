@@ -106,6 +106,22 @@ tr:last-child td{border-bottom:0}
 .src li{break-inside:avoid;margin:0 0 14px 28px}
 .src a{color:var(--ink);text-decoration:none}
 .src span{color:var(--muted)}
+
+/* budget slide */
+.budget{display:grid;grid-template-columns:680px 1fr;gap:30px;align-items:stretch;top:236px!important;height:680px}
+.budget .hero{background:var(--blue);color:#fff;border-radius:24px;padding:40px 50px;display:flex;flex-direction:column;justify-content:space-between}
+.budget .hero .k{font-size:26px;font-weight:500;color:rgba(255,255,255,.8)}
+.budget .hero .v{font-size:150px;font-weight:600;letter-spacing:-4px;line-height:1;margin:18px 0 18px;white-space:nowrap}
+.budget .hero .d{font-size:27px;line-height:1.4}
+.budget .hero .row{display:flex;gap:60px;border-top:1px solid rgba(255,255,255,.25);padding-top:24px}
+.budget .hero .row b{display:block;font-size:44px;font-weight:600}
+.budget .hero .row span{font-size:22px;color:rgba(255,255,255,.8)}
+.budget .side{display:grid;grid-template-rows:auto 1fr 1fr;gap:24px}
+.budget .side .card{padding:28px 40px}
+.budget .side h3{font-size:30px;margin-bottom:14px}
+.split{display:flex;gap:18px}
+.split div{flex:1;background:var(--bg);border-radius:16px;padding:18px 22px;font-size:24px;line-height:1.35}
+.split b{display:block;font-size:34px;font-weight:600;color:var(--blue);margin-bottom:4px}
 </style>
 </head>
 <body>
@@ -211,6 +227,37 @@ tr:last-child td{border-bottom:0}
     <div class="card"><div class="when2">Q1 2027</div><div class="num">03</div><h3>Пересмотр</h3><p>Вернуться к решению, когда появятся европейские бенчмарки и, вероятно, расширятся разрешённые категории.</p></div>
   </div>
   <div class="brand sr"><img src="assets/sunrock_dark.png" alt="Sunrock Residences"></div>
+</section>
+
+<!-- Budget -->
+<section class="slide">
+  <h1>Бюджет на старт теста</h1>
+  <div class="sub">Рекомендуемый тестовый бюджет на первые рекламные кампании в ChatGPT</div>
+  <div class="body budget">
+    <div class="hero">
+      <div>
+        <div class="k">Рекомендуемый бюджет</div>
+        <div class="v">€1&nbsp;000</div>
+        <div class="d">Достаточно, чтобы получить первые данные по Кипру и ЕС и сравнить канал с Google Ads</div>
+      </div>
+      <div class="row">
+        <div><b>4 недели</b><span>длительность теста</span></div>
+        <div><b>≈ €35</b><span>в день</span></div>
+      </div>
+    </div>
+    <div class="side">
+      <div class="card"><h3>Распределение</h3>
+        <div class="split">
+          <div><b>€500</b>Lifestyle: «жизнь в Лимассоле», английский язык</div>
+          <div><b>€500</b>Гид по районам и локации, ведём на страницу локации</div>
+        </div>
+      </div>
+      <div class="card"><h3>Ожидаемый объём</h3><p>При цене клика €2–5 — примерно <b>200–500 переходов</b> на сайт</p></div>
+      <div class="card"><h3>Как оцениваем</h3><p>CTR, вовлечённые сессии, стоимость заявки в сравнении с Google Ads. Решение о масштабировании — по итогам 4 недель</p></div>
+    </div>
+  </div>
+  <div class="note">Бюджет без учёта работ по настройке. Оценка объёма по открытым данным США: европейских бенчмарков пока нет.</div>
+  <div class="brand"><svg><use href="#knot"/></svg><span>OpenAI</span></div>
 </section>
 
 </body>
