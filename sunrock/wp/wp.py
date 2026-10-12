@@ -40,7 +40,12 @@ def request(method, path, query="", body=None, retries=4):
             with urllib.request.urlopen(req, timeout=40) as r:
                 return r.status, json.loads(r.read() or b"null")
         except urllib.error.HTTPError as e:
-            return e.code, json.loads(e.read() or b"null")
+            raw = e.read()
+            try:
+                return e.code, json.loads(raw or b"null")
+            except ValueError:
+                return e.code, {"non_json_body": raw[:600].decode("utf-8", "replace"),
+                                "server": e.headers.get("server"), "content_type": e.headers.get("content-type")}
         except (urllib.error.URLError, ConnectionError) as e:
             # the host occasionally resets connections; back off and retry
             if attempt == retries - 1:
@@ -50,6 +55,10 @@ def request(method, path, query="", body=None, retries=4):
 
 def main(argv):
     if not argv or argv[0] == "me":
+        # the host's firewall blocks /wp/v2/users*, so check auth via an admin-only endpoint
+        status, d = request("GET", "wp/v2/settings", "_fields=title,url")
+        print("auth OK (admin)" if status == 200 else "auth failed", status, json.dumps(d, ensure_ascii=False)[:300])
+        return
         status, d = request("GET", "wp/v2/users/me", "context=edit&_fields=id,username,name,roles,capabilities")
         if status == 200:
             caps = d.get("capabilities", {})
