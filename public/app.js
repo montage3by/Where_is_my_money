@@ -233,6 +233,7 @@ function renderTodos() {
     }
 
     return `<div class="todo card ${p.done ? 'done' : ''} ${status}">
+      ${typeof cardArt === 'function' ? cardArt(t) : ''}
       <div class="todo-row">
         ${check}
         <button class="todo-main" ${expandable ? `data-expand="${t.id}" aria-expanded="${open}"` : 'tabindex="-1"'}>

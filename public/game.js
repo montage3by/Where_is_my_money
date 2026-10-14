@@ -370,6 +370,13 @@ function renderGame() {
   renderGameTab();
 }
 
+// Иллюстрация на карточке дела — по главной характеристике (японские гравюры, public domain)
+function cardArt(t) {
+  const us = units(t);
+  const stat = t.stat || (us[0] && us[0].stat) || statOf(t.title);
+  return `<img class="card-art" src="img/stat-${stat}.jpg" alt="" loading="lazy" onerror="this.remove()">`;
+}
+
 // Для карточек дел: серия и опыт
 function gameBadges(date, t) {
   const us = units(t);
