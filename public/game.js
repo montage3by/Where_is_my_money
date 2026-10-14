@@ -88,20 +88,17 @@ function levelOf(xp) {
   return { level: L, from: xpForLevel(L), to: xpForLevel(L + 1) };
 }
 
-// Ранги сезона (сезон = календарный месяц)
-const TIERS = [['Бронза', 0], ['Серебро', 600], ['Золото', 1500], ['Платина', 2800], ['Алмаз', 4200], ['Легенда', 6000]];
-const ROMAN = ['IV', 'III', 'II', 'I'];
+// Ранг охотника — по всему XP за игру (как гильдейские ранги в MMORPG)
+const RANKS = [['F', 0], ['D', 1500], ['C', 4000], ['B', 7500], ['A', 12000], ['S', 17000]];
 function rankOf(xp) {
   let i = 0;
-  while (i + 1 < TIERS.length && xp >= TIERS[i + 1][1]) i++;
-  const [name, lo] = TIERS[i];
-  const hi = TIERS[i + 1] ? TIERS[i + 1][1] : lo + 2000;
-  const step = (hi - lo) / 4;
-  const div = Math.min(3, Math.floor((Math.max(0, xp) - lo) / step));
-  const next = div < 3 ? `${name} ${ROMAN[div + 1]}` : TIERS[i + 1] ? `${TIERS[i + 1][0]} IV` : null;
-  return { name: `${name} ${ROMAN[Math.max(0, div)]}`, tier: name.toLowerCase(), toNext: next ? Math.ceil(lo + step * (Math.max(0, div) + 1) - xp) : 0, next,
-    pct: Math.max(0, Math.min(1, (xp - lo - step * Math.max(0, div)) / step)) };
+  while (i + 1 < RANKS.length && xp >= RANKS[i + 1][1]) i++;
+  const [letter, lo] = RANKS[i];
+  const nx = RANKS[i + 1];
+  return { letter, i, next: nx ? nx[0] : null, toNext: nx ? nx[1] - Math.max(0, xp) : 0,
+    pct: nx ? Math.max(0, Math.min(1, (xp - lo) / (nx[1] - lo))) : 1 };
 }
+const rankFrame = (letter, cls = '') => `<span class="rank-frame r-${letter} ${cls}">${letter}</span>`;
 
 // Серия дела: подряд дни (по которым дело было в списке), когда оно выполнено целиком
 function taskStreak(t, today) {
@@ -164,8 +161,6 @@ function gameSummary() {
     run = d.ratio >= 0.8 ? run + 1 : 0;
     best = Math.max(best, run);
   }
-  const month = today.slice(0, 7);
-  const seasonXp = days.filter((d) => d.date.startsWith(month)).reduce((a, d) => a + d.net, 0);
 
   // Для достижений
   const perfect = days.filter((d) => d.max && d.ratio >= 1).length;
@@ -198,7 +193,7 @@ function gameSummary() {
     perfect: perfect >= 1, perfect5: perfect >= 5, lvl5: lvl >= 5, lvl10: lvl >= 10, lvl20: lvl >= 20,
     water7: water >= 7, smoke7: smoke >= 7, gym10: gym >= 10, food7: foodDays >= 7, xp5000: total >= 5000, final: today >= gameEnd(),
   };
-  return { today, days, total, stats, weekAgo, streak, best, seasonXp, got, unlocked: ACHIEVEMENTS.filter((a) => got[a.id]).length };
+  return { today, days, total, stats, weekAgo, streak, best, got, unlocked: ACHIEVEMENTS.filter((a) => got[a.id]).length };
 }
 
 let G = null; // последняя сводка, обновляется в renderGame
@@ -208,6 +203,7 @@ function renderGameBar() {
   const date = ymd(todoDay());
   const n = gameDayN(date);
   const L = levelOf(Math.max(0, G.total));
+  const R = rankOf(G.total);
   const inGame = date >= gameStart() && date <= gameEnd();
   const pct = Math.round(((Math.max(0, G.total) - L.from) / (L.to - L.from)) * 100);
   const today = dayCalc(G.today);
@@ -232,10 +228,12 @@ function renderGameBar() {
       <span class="chip" title="Достижения">🏆 ${G.unlocked}</span>
       <span class="chip" title="Опыт">⚡ ${G.total}</span>
       <button class="chip lvl" data-tab="game" title="Профиль игрока">Ур. ${L.level}</button>
+      <button class="chip-rank" data-tab="game" title="Ранг охотника">${rankFrame(R.letter, 'sm')}</button>
     </div>
     ${inGame ? `<div class="gb-day"><span class="gb-n">ДЕНЬ ${n}</span><span class="gb-of">/ ${gameLength()}</span></div>` : ''}
     <div class="lvl-bar" title="${G.total} XP"><span style="width:${Math.max(0, Math.min(100, pct))}%"></span></div>
-    <div class="kcal gb-sub">${L.to - Math.max(0, G.total)} XP до уровня ${L.level + 1} · сегодня +${today.gain} из ${today.max}</div>
+    <div class="gb-sub"><span>⬆ <b>${L.to - Math.max(0, G.total)} XP</b> до ур. ${L.level + 1}</span>${R.next ? `<span>${rankFrame(R.next, 'xs')} <b>${R.toNext} XP</b> до ${R.next}-ранга</span>` : '<span>S-ранг — вершина 👑</span>'}</div>
+    <div class="kcal gb-sub">Сегодня +${today.gain} из ${today.max} XP</div>
     ${checkup}`;
 }
 
@@ -312,8 +310,7 @@ function beforeAfter() {
 function renderGameTab() {
   const L = levelOf(Math.max(0, G.total));
   const pct = Math.round(((Math.max(0, G.total) - L.from) / (L.to - L.from)) * 100);
-  const rank = rankOf(G.seasonXp);
-  const monthName = new Date().toLocaleDateString('ru-RU', { month: 'long' });
+  const R = rankOf(G.total);
   const endDays = Math.max(0, gameDayN(gameEnd()) - gameDayN(G.today));
   $('#game-tab').innerHTML = `
     <div class="card g-level">
@@ -323,10 +320,15 @@ function renderGameTab() {
       <div class="kcal g-center">${L.to - Math.max(0, G.total)} XP до уровня ${L.level + 1} · день ${Math.min(gameDayN(G.today), gameLength())} из ${gameLength()} · до финиша ${endDays} дн.</div>
     </div>
 
-    <h3 class="cat"><span>Сезон · ${monthName}</span><span>${G.seasonXp} XP</span></h3>
-    <div class="card g-season tier-${rank.tier}">
-      <div><b class="g-rank">${rank.name}</b><span class="kcal">${rank.next ? `${rank.toNext} XP до ${rank.next}` : 'Максимальный ранг'}</span></div>
-      <div class="bar"><span style="width:${Math.round(rank.pct * 100)}%"></span></div>
+    <h3 class="cat"><span>Ранг охотника</span><span>${G.total.toLocaleString('ru-RU')} XP</span></h3>
+    <div class="card g-rank-card r-${R.letter}">
+      <div class="g-rank-top">
+        ${rankFrame(R.letter, 'lg')}
+        <div class="g-rank-info"><b>${R.letter}-ранг</b>
+          <span class="kcal">${R.next ? `ещё <b>${R.toNext.toLocaleString('ru-RU')} XP</b> до ${R.next}-ранга` : 'Высший ранг. Ты легенда 👑'}</span></div>
+      </div>
+      <div class="bar rank-bar"><span style="width:${Math.round(R.pct * 100)}%"></span></div>
+      <div class="rank-ladder">${RANKS.map(([l, x], i) => `<div class="${i < R.i ? 'done' : i === R.i ? 'cur' : ''}">${rankFrame(l, 'xs')}<span>${x ? (x >= 1000 ? x / 1000 + 'k' : x) : '0'}</span></div>`).join('')}</div>
     </div>
 
     <h3 class="cat"><span>Характеристики</span><span class="kcal">пунктир — неделю назад</span></h3>
@@ -360,7 +362,7 @@ function renderGameTab() {
       <li>Каждое дело качает одну характеристику. 💪 Сила — спорт, еда по рациону, вода. 🧠 Интеллект — учёба, книги, курсы. 🛡️ Дисциплина — подъём, сигареты и всё прочее. 🎯 Фокус — работа, HH, оплаты и бытовые дела. 🔥 Уверенность — созвоны и встречи. В задаче можно выбрать вручную.</li>
       <li>Сигареты: в лимите — +XP, сверх лимита — −XP.</li>
       <li>Серия 🔥 — дни подряд, закрытые на 80%+. У каждого дела своя серия.</li>
-      <li>Сезон — месяц: ранг считается по XP за месяц. Игра идёт до ${new Date(gameEnd() + 'T00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}.</li>
+      <li>Ранг охотника — по всему XP за игру: F → D (1 500) → C (4 000) → B (7 500) → A (12 000) → S (17 000). S — если держать ~80% каждый день до конца. Игра идёт до ${new Date(gameEnd() + 'T00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}.</li>
     </ul>`;
 }
 

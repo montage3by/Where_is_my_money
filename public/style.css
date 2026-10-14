@@ -296,7 +296,6 @@ h1 { letter-spacing: 0.04em; }
 .gb-of { font-size: 20px; color: var(--muted); font-weight: 700; }
 .lvl-bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
 .lvl-bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent-strong), var(--accent)); }
-.gb-sub { font-size: 13px; }
 .checkup { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; background: var(--bg);
   border: 1px solid var(--line); font-size: 14px; }
 .checkup.warn { border-color: var(--warn); }
@@ -324,11 +323,32 @@ h1 { letter-spacing: 0.04em; }
 .seg-bar i.on { background: var(--accent); }
 .g-center { grid-column: 1 / -1; text-align: center; font-size: 13px; }
 
-.g-season { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; border-color: #8a5a3c; }
-.g-season > div:first-child { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.g-rank { font-family: var(--serif); font-size: 22px; font-weight: 500; }
-.tier-серебро .g-rank { color: #c9ccd3; } .tier-золото .g-rank { color: #e8c15b; } .tier-платина .g-rank { color: #9fe3dc; }
-.tier-алмаз .g-rank { color: #9cc4ff; } .tier-бронза .g-rank { color: #d39a6a; } .tier-легенда .g-rank { color: var(--accent); }
+.rank-frame { --rc: #8a8f98; display: inline-grid; place-items: center; width: 30px; height: 30px; font-weight: 900; font-size: 17px;
+  font-family: var(--serif); color: var(--rc); border: 2px solid var(--rc); border-radius: 6px; outline: 1px solid var(--rc);
+  outline-offset: 2px; background: color-mix(in srgb, var(--rc) 14%, transparent); line-height: 1; flex: none; }
+.rank-frame.xs { width: 20px; height: 20px; font-size: 12px; border-width: 1.5px; outline: none; border-radius: 4px; vertical-align: -4px; }
+.rank-frame.sm { width: 26px; height: 26px; font-size: 15px; outline-offset: 1px; }
+.rank-frame.lg { width: 72px; height: 72px; font-size: 44px; border-width: 3px; border-radius: 10px; outline-width: 2px; outline-offset: 4px;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--rc) 35%, transparent); }
+.r-F { --rc: #8a8f98; } .r-D { --rc: #6fbf73; } .r-C { --rc: #5aa9e6; } .r-B { --rc: #a879e6; } .r-A { --rc: #e8b84b; } .r-S { --rc: #ff5a3c; }
+.rank-frame.r-S, .rank-frame.r-A { box-shadow: 0 0 12px color-mix(in srgb, var(--rc) 60%, transparent); }
+.rank-frame.r-S { animation: s-glow 2s ease-in-out infinite; }
+@keyframes s-glow { 50% { box-shadow: 0 0 22px var(--rc); } }
+.chip-rank { background: none; border: 0; padding: 0 2px; cursor: pointer; display: inline-flex; align-items: center; }
+.gb-sub { font-size: 13px; display: flex; gap: 6px 14px; flex-wrap: wrap; color: var(--muted); }
+.gb-sub b { color: var(--text); font-variant-numeric: tabular-nums; }
+
+.g-rank-card { padding: 18px 16px 14px; display: flex; flex-direction: column; gap: 12px;
+  border-color: color-mix(in srgb, var(--rc) 55%, var(--line));
+  background: linear-gradient(160deg, color-mix(in srgb, var(--rc) 16%, transparent), var(--card) 60%); }
+.g-rank-top { display: flex; align-items: center; gap: 20px; padding-left: 6px; }
+.g-rank-info { display: flex; flex-direction: column; gap: 2px; }
+.g-rank-info > b { font-family: var(--serif); font-size: 26px; font-weight: 600; color: var(--rc); }
+.rank-bar > span { background: var(--rc); }
+.rank-ladder { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; text-align: center; }
+.rank-ladder div { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); opacity: .45; }
+.rank-ladder .done { opacity: .8; }
+.rank-ladder .cur { opacity: 1; color: var(--text); font-weight: 700; }
 
 .g-stats { padding: 8px 16px 12px; }
 .radar { width: 100%; max-width: 300px; display: block; margin: 0 auto 4px; }
