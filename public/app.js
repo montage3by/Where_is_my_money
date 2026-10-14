@@ -7,6 +7,7 @@ let state = { checks: {}, weights: [], counters: {}, snapshots: {} };
 const todayIdx = (new Date().getDay() + 6) % 7; // Пн = 0
 let selectedDay = todayIdx;
 let hideBought = false;
+let todoFilter = 'todo'; // «Дела / Готово / Пропущено»
 let viewDate = null; // YYYY-MM-DD открытого дня во вкладке «Дела»
 let followDefault = true; // пользователь не листал — после полуночи переезжаем на новый день
 const expanded = new Set();
@@ -183,11 +184,25 @@ function renderTodos() {
 
   const tasks = visibleTasks(date);
   const progress = tasks.map((t) => taskProgress(date, t));
-  const dayN = daysFromToday(date) - daysFromToday(plan.start) + 1;
   const goals = tasks.filter((t) => !isLimit(t)).length;
-  $('#todo-progress').textContent = `День ${dayN} · сделано ${progress.filter((p) => p.done).length} из ${goals}`;
+  $('#todo-progress').textContent = `сделано ${progress.filter((p) => p.done).length} из ${goals}`;
+
+  // Фильтр «Дела / Готово / Пропущено»
+  const today = ymd(new Date());
+  const bucket = (t, p) => {
+    const full = typeof unitFractions === 'function' ? unitFractions(date, t).every((f) => f >= 1) : p.done;
+    if (isLimit(t)) return date < today ? (full ? 'done' : 'missed') : 'todo';
+    if (p.done) return 'done';
+    if (date < today || (date === today && taskStatus(t, false, date) === 'late' && !t.once)) return 'missed';
+    return 'todo';
+  };
+  const buckets = tasks.map((t, i) => bucket(t, progress[i]));
+  const nIn = (b) => buckets.filter((x) => x === b).length;
+  $('#todo-filter').innerHTML = [['todo', 'Дела'], ['done', 'Готово'], ['missed', 'Пропущено']]
+    .map(([k, name]) => `<button data-filter="${k}" aria-pressed="${todoFilter === k}">${name} <span>${nIn(k)}</span></button>`).join('');
 
   $('#todo-list').innerHTML = tasks.map((t, i) => {
+    if (buckets[i] !== todoFilter) return '';
     const p = progress[i];
     const status = taskStatus(t, p.done, date);
     const expandable = true; // внутри всегда есть хотя бы кнопка «Изменить»
@@ -202,7 +217,8 @@ function renderTodos() {
 
     const badge = (status === 'now' ? '<span class="badge">сейчас</span>' : '') + (t.once ? '<span class="badge soft">разово</span>' : '')
       + (t.days ? `<span class="badge soft">${daysLabel(t.days)}</span>` : '')
-      + (isLimit(t) ? '<span class="badge soft">лимит</span>' : '');
+      + (isLimit(t) ? '<span class="badge soft">лимит</span>' : '')
+      + (typeof gameBadges === 'function' ? gameBadges(date, t) : '');
     const countLabel = p.of ? `<span class="kcal">${p.n}/${p.of}${t.counter?.unit ? ' ' + esc(t.counter.unit) : ''}</span>` : '';
 
     let body = '';
@@ -230,7 +246,8 @@ function renderTodos() {
       </div>
       ${body}
     </div>`;
-  }).join('') + `<button class="add-btn" data-add>+ Добавить дело</button>`;
+  }).join('') + (nIn(todoFilter) ? '' : `<p class="empty filter-empty">${{ todo: 'Все дела на сегодня закрыты или пропущены 🔥', done: 'Пока ничего не отмечено', missed: 'Ничего не пропущено 💪' }[todoFilter]}</p>`)
+    + `<button class="add-btn" data-add>+ Добавить дело</button>`;
 }
 
 // ——— Редактор дел ———
@@ -285,6 +302,8 @@ function openEditor(task) {
   f.when.value = !task ? 'date' : t.date ? 'date' : t.once ? 'once' : 'daily';
   f.date.value = t.date || t.from || (task && !t.once ? '' : viewDate);
   dpSyncAll(f);
+  f.stat.value = t.stat || '';
+  f.xp.value = t.xp ?? '';
   f.querySelectorAll('[name=days]').forEach((cb) => (cb.checked = !t.days || t.days.includes(Number(cb.value))));
   syncFormVisibility();
   dlg().showModal();
@@ -312,6 +331,8 @@ async function saveTask(e) {
     when: f.when.value,
     date: f.date.value,
     days: [...f.querySelectorAll('[name=days]:checked')].map((cb) => Number(cb.value)),
+    stat: f.stat.value,
+    xp: f.xp.value,
   };
   try {
     await write('/api/task', body);
@@ -482,9 +503,11 @@ function render() {
   renderFood();
   renderShop();
   renderWeights();
+  if (typeof renderGame === 'function') renderGame();
 }
 
 function showTab(name) {
+  if (!document.getElementById('tab-' + name)) name = 'todo';
   document.querySelectorAll('.tabs button').forEach((b) => b.setAttribute('aria-selected', b.dataset.tab === name));
   document.querySelectorAll('.panel').forEach((p) => (p.hidden = p.id !== 'tab-' + name));
   try { localStorage.setItem('tab', name); } catch {}
@@ -588,6 +611,11 @@ document.addEventListener('click', async (e) => {
   const tab = e.target.closest('[data-tab]');
   if (tab) return showTab(tab.dataset.tab);
 
+  const flt = e.target.closest('[data-filter]');
+  if (flt) {
+    todoFilter = flt.dataset.filter;
+    return renderTodos();
+  }
   if (e.target.closest('[data-add]')) return openEditor(null);
   if (e.target.closest('[data-city]')) return openCity();
   const pick = e.target.closest('[data-pick]');

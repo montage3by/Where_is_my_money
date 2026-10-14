@@ -19,20 +19,22 @@
 
   <nav class="tabs" role="tablist">
     <button role="tab" data-tab="todo" aria-selected="true">Дела</button>
+    <button role="tab" data-tab="game">Игра</button>
     <button role="tab" data-tab="meals">Рацион</button>
     <button role="tab" data-tab="shop">Покупки</button>
     <button role="tab" data-tab="weight">Вес</button>
-    <button role="tab" data-tab="rules">Правила</button>
   </nav>
 
   <main>
     <section id="tab-todo" class="panel">
+      <div class="card game-bar" id="game-bar"></div>
       <div class="card info" id="info" hidden></div>
       <div class="date-nav">
         <button data-shift="-1" aria-label="Предыдущий день">‹</button>
         <div><div id="todo-date"></div><div class="kcal" id="todo-progress"></div></div>
         <button data-shift="1" aria-label="Следующий день">›</button>
       </div>
+      <div class="todo-filter" id="todo-filter"></div>
       <div id="todo-list"></div>
       <h3 class="cat">История</h3>
       <div class="card history" id="todo-history"></div>
@@ -57,6 +59,8 @@
           <button type="submit">Записать</button>
         </div>
       </form>
+      <h3 class="cat">Правила питания</h3>
+      <ul class="card rules" id="rules"></ul>
       <button class="link-btn" data-reset="meals">Сбросить отметки рациона за неделю</button>
     </section>
 
@@ -77,8 +81,8 @@
       <ul class="card weights" id="weights"></ul>
     </section>
 
-    <section id="tab-rules" class="panel" hidden>
-      <ul class="card rules" id="rules"></ul>
+    <section id="tab-game" class="panel" hidden>
+      <div id="game-tab"></div>
     </section>
   </main>
 
@@ -100,6 +104,19 @@
       <label class="field" data-kind="subtasks" hidden><span>Подпункты — по одному на строку</span><textarea name="subtasks" rows="4"></textarea></label>
       <label class="field" data-kind="counter" hidden><span>Цель</span><input type="number" name="target" min="1" max="10000" inputmode="numeric"></label>
       <label class="field"><span>Описание</span><textarea name="details" rows="2" maxlength="1000"></textarea></label>
+      <div class="row2">
+        <label class="field"><span>Характеристика</span>
+          <select name="stat">
+            <option value="">Авто по названию</option>
+            <option value="str">💪 Сила</option>
+            <option value="wis">📖 Мудрость</option>
+            <option value="dis">🛡️ Дисциплина</option>
+            <option value="foc">🎯 Фокус</option>
+            <option value="con">🔥 Уверенность</option>
+          </select>
+        </label>
+        <label class="field"><span>Опыт, XP</span><input type="number" name="xp" min="0" max="500" inputmode="numeric" placeholder="авто (0 — вне игры)"></label>
+      </div>
       <div class="field"><span>Когда</span>
         <div class="seg">
           <label><input type="radio" name="when" value="date" checked><span>Один день</span></label>
@@ -140,5 +157,6 @@
 
   <div class="toast" id="toast" hidden></div>
   <script src="app.js"></script>
+  <script src="game.js"></script>
 </body>
 </html>

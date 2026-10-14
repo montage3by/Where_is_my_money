@@ -76,6 +76,13 @@ function cleanTask(input, existing) {
   if (t.start && t.end && t.end <= t.start) throw new Error('Конец раньше начала');
   const details = str(input.details, 1000);
   if (details) t.details = details;
+  // Игра: характеристика и опыт (пусто — авто; xp 0 — дело вне игры)
+  if (['str', 'wis', 'dis', 'foc', 'con'].includes(input.stat)) t.stat = input.stat;
+  if (input.xp !== '' && input.xp != null) {
+    const xp = Math.round(Number(input.xp));
+    if (!(xp >= 0 && xp <= 500)) throw new Error('Опыт — от 0 до 500');
+    t.xp = xp;
+  }
   if (input.kind === 'subtasks') {
     const subs = (Array.isArray(input.subtasks) ? input.subtasks : []).map((x) => str(x, 200)).filter(Boolean).slice(0, 30);
     if (!subs.length) throw new Error('Добавь хотя бы один подпункт');

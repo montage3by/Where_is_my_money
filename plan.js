@@ -197,7 +197,10 @@ const routine = [
 days.forEach((d) => d.meals.forEach((m, i) => (m.id = `meal:${d.id}:${i}`)));
 shopping.forEach((c, ci) => c.items.forEach((it, i) => (it.id = `shop:${ci}:${i}`)));
 
-// Первый день трекера: раньше него листать нельзя, от него считается «день N»
+// Первый день трекера: раньше него листать нельзя
 const start = '2026-10-01';
 
-module.exports = { days, shopping, summary, rules, routine, start };
+// Игра-челлендж: день 1 — 14 октября, финиш — 31 декабря
+const game = { start: '2026-10-14', end: '2026-12-31' };
+
+module.exports = { days, shopping, summary, rules, routine, start, game };
