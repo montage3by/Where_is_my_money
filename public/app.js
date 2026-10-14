@@ -38,7 +38,16 @@ async function api(path, body) {
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || res.statusText);
+  checkBuild(res.headers.get('X-Build'));
   return res.json();
+}
+
+// Вышла новая версия сайта — перезагрузить страницу (кроме момента, когда что-то сохраняется или открыта форма)
+let build = null;
+function checkBuild(b) {
+  if (!b) return;
+  if (!build) build = b;
+  else if (b !== build && !pendingWrites && !document.querySelector('dialog[open]')) location.reload();
 }
 
 function toast(msg) {
