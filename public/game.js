@@ -201,10 +201,11 @@ let G = null; // последняя сводка, обновляется в rend
 // ——— Шапка игры во вкладке «Дела» ———
 function renderGameBar() {
   const date = ymd(todoDay());
-  const n = gameDayN(date);
+  // Номер дня игры — всегда по сегодняшнему дню, а не по открытой в списке дате
+  const n = gameDayN(G.today);
   const L = levelOf(Math.max(0, G.total));
   const R = rankOf(G.total);
-  const inGame = date >= gameStart() && date <= gameEnd();
+  const inGame = G.today >= gameStart() && G.today <= gameEnd();
   const pct = Math.round(((Math.max(0, G.total) - L.from) / (L.to - L.from)) * 100);
   const today = dayCalc(G.today);
   const hour = new Date().getHours();
