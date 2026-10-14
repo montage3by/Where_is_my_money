@@ -1,12 +1,10 @@
 const $ = (sel) => document.querySelector(sel);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const money = (n) => n.toFixed(2).replace(/\.00$/, '') + ' ₾';
 
 let plan;
 let state = { checks: {}, weights: [], counters: {}, snapshots: {} };
 const todayIdx = (new Date().getDay() + 6) % 7; // Пн = 0
 let selectedDay = todayIdx;
-let hideBought = false;
 let todoFilter = 'todo'; // «Дела / Готово / Пропущено»
 let viewDate = null; // YYYY-MM-DD открытого дня во вкладке «Дела»
 let followDefault = true; // пользователь не листал — после полуночи переезжаем на новый день
@@ -461,24 +459,6 @@ function renderMeals() {
     })).join('')}`;
 }
 
-function renderShop() {
-  const items = plan.shopping.flatMap((c) => c.items);
-  const total = items.reduce((s, i) => s + i.price, 0);
-  const bought = items.filter((i) => isDone(i.id));
-  const spent = bought.reduce((s, i) => s + i.price, 0);
-  $('#shop-stat').innerHTML = `
-    <div><div class="big">${bought.length} / ${items.length}</div><div class="kcal">${money(spent)} из ~${money(total)}</div></div>
-    <div class="bar"><span style="width:${(bought.length / items.length) * 100}%"></span></div>`;
-
-  $('#shop-list').innerHTML = plan.shopping.map((c) => {
-    const left = c.items.filter((i) => !isDone(i.id));
-    const shown = hideBought ? left : c.items;
-    if (!shown.length) return '';
-    return `<div class="cat${left.length ? '' : ' all-done'}"><span>${esc(c.category)}</span><span>${c.items.length - left.length}/${c.items.length}</span></div>
-      <div class="card">${shown.map((i) => taskHtml({ id: i.id, title: i.name, meta: esc(i.qty), right: money(i.price) })).join('')}</div>`;
-  }).join('') || '<div class="card"><p class="empty">Всё куплено 🎉</p></div>';
-}
-
 function renderWeights() {
   const ws = state.weights;
   if (!ws.length) {
@@ -502,7 +482,6 @@ function render() {
   renderHistory();
   renderMeals();
   renderFood();
-  renderShop();
   renderWeights();
   if (typeof renderGame === 'function') renderGame();
 }
@@ -517,11 +496,6 @@ function showTab(name) {
 document.addEventListener('change', (e) => {
   if (e.target.matches('input[data-id]')) toggle(e.target.dataset.id, e.target.checked);
   if (e.target.matches('input[data-group]')) setGroup(e.target.dataset.group, e.target.checked);
-  if (e.target.id === 'hide-bought') {
-    hideBought = e.target.checked;
-    try { localStorage.setItem('hideBought', hideBought ? '1' : ''); } catch {}
-    renderShop();
-  }
 });
 
 // ——— Свой календарь вместо системного (его нельзя стилизовать) ———
@@ -813,8 +787,6 @@ async function refresh() {
   $('#weight-form').date.value = ymd(d);
   dpSyncAll($('#weight-form'));
   try {
-    hideBought = localStorage.getItem('hideBought') === '1';
-    $('#hide-bought').checked = hideBought;
     const tab = localStorage.getItem('tab');
     if (tab) showTab(tab);
   } catch {}
