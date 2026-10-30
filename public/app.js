@@ -493,9 +493,11 @@ function render() {
   renderFood();
   renderWeights();
   if (typeof renderGame === 'function') renderGame();
+  if (typeof renderGym === 'function') renderGym();
 }
 
 function showTab(name) {
+  if (name === 'weight') name = 'gym';
   if (!document.getElementById('tab-' + name)) name = 'todo';
   document.querySelectorAll('.tabs button').forEach((b) => b.setAttribute('aria-selected', b.dataset.tab === name));
   document.querySelectorAll('.panel').forEach((p) => (p.hidden = p.id !== 'tab-' + name));

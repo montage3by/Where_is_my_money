@@ -20,8 +20,8 @@
   <nav class="tabs" role="tablist">
     <button role="tab" data-tab="todo" aria-selected="true">Дела</button>
     <button role="tab" data-tab="game">Игра</button>
+    <button role="tab" data-tab="gym">Тренировки</button>
     <button role="tab" data-tab="meals">Рацион</button>
-    <button role="tab" data-tab="weight">Вес</button>
   </nav>
 
   <main>
@@ -63,14 +63,23 @@
       <button class="link-btn" data-reset="meals">Сбросить отметки рациона за неделю</button>
     </section>
 
-    <section id="tab-weight" class="panel" hidden>
-      <form class="card weight-form" id="weight-form">
-        <div class="dp-field wf-date"><span>Дата</span><input type="hidden" name="date"><button type="button" class="date-btn" data-dp-toggle></button><div class="dp" hidden></div></div>
-        <label>Вес, кг <input type="number" name="kg" step="0.1" min="20" max="400" inputmode="decimal" required></label>
-        <button type="submit">Записать</button>
-      </form>
-      <p class="hint">Раз в неделю, утром натощак.</p>
-      <ul class="card weights" id="weights"></ul>
+    <section id="tab-gym" class="panel" hidden>
+      <div class="card gym-week" id="gym-week"></div>
+      <div class="card gym-today" id="gym-today"></div>
+      <h3 class="cat"><span>Прогресс</span><span class="kcal">рабочие веса и вес тела</span></h3>
+      <div class="gym-chips" id="gym-chips"></div>
+      <div class="card gym-progress" id="gym-progress"></div>
+      <div id="gym-body" hidden>
+        <form class="card weight-form" id="weight-form">
+          <div class="dp-field wf-date"><span>Дата</span><input type="hidden" name="date"><button type="button" class="date-btn" data-dp-toggle></button><div class="dp" hidden></div></div>
+          <label>Вес, кг <input type="number" name="kg" step="0.1" min="20" max="400" inputmode="decimal" required></label>
+          <button type="submit">Записать</button>
+        </form>
+        <p class="hint">Раз в неделю, утром натощак.</p>
+        <ul class="card weights" id="weights"></ul>
+      </div>
+      <h3 class="cat"><span>Программа</span><span class="kcal">пн–пт, утром</span></h3>
+      <div id="gym-program"></div>
     </section>
 
     <section id="tab-game" class="panel" hidden>
@@ -147,8 +156,11 @@
     </form>
   </dialog>
 
+  <dialog id="img-dialog" class="img-dialog"><img alt="Техника упражнений"></dialog>
+
   <div class="toast" id="toast" hidden></div>
   <script src="app.js"></script>
   <script src="game.js"></script>
+  <script src="gym.js"></script>
 </body>
 </html>

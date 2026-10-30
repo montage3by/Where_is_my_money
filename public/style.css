@@ -410,3 +410,80 @@ h1 { letter-spacing: 0.04em; }
 .ach.on:has(img)::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.1) 60%); }
 .ach.on:has(img) > :not(img) { position: relative; z-index: 1; }
 .ach.on:has(img) .ach-icon { display: none; }
+
+/* ——— Тренировки ——— */
+.gym-week { padding: 12px 10px 10px; }
+.gw-head { display: grid; grid-template-columns: auto 1fr auto auto; gap: 8px; align-items: center; padding: 0 2px 8px; font-size: 12px; letter-spacing: .04em; white-space: nowrap; text-transform: uppercase; }
+.gw-head button { font: inherit; font-size: 20px; line-height: 1; background: none; border: 0; color: var(--muted); cursor: pointer; padding: 0 6px; }
+.gw-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.gw-day { display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: 0; color: var(--text); font: inherit; cursor: pointer; padding: 2px 0; }
+.gw-day .kcal { font-size: 11px; }
+.gw-day i { font-style: normal; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--wc) 55%, transparent); font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
+.gw-day small { font-size: 10px; color: var(--muted); }
+.gw-day.rest i { border-style: dashed; border-color: var(--line); color: var(--muted); }
+.gw-day.done i { background: var(--wc); border-color: var(--wc); color: #fff; }
+.gw-day.today i { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
+.gw-day.sel small { color: var(--text); font-weight: 700; }
+
+.gym-today { --wc: var(--accent); padding: 14px 16px; border-color: color-mix(in srgb, var(--wc) 45%, var(--line));
+  background: linear-gradient(160deg, color-mix(in srgb, var(--wc) 14%, transparent), var(--card) 55%); }
+.gt-head { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: .08em; }
+.gt-title { margin: 6px 0 2px; font-size: 22px; line-height: 1.2; }
+.gt-ok { color: var(--wc); }
+.gt-pick { display: flex; gap: 6px; margin: 12px 0 4px; overflow-x: auto; scrollbar-width: none; }
+.gt-pick button { flex: 1 0 auto; font: inherit; font-size: 13px; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--muted); cursor: pointer; }
+.gt-pick button[aria-pressed="true"] { border-color: var(--wc); color: var(--text); background: color-mix(in srgb, var(--wc) 22%, var(--bg)); }
+.gx-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.gx { border: 1px solid var(--line); border-radius: 12px; background: var(--bg); }
+.gx.open { border-color: color-mix(in srgb, var(--wc) 50%, var(--line)); }
+.gx-head { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: none; border: 0; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.gx-n { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--wc); font-weight: 700; font-size: 13px; }
+.gx.done .gx-n { background: var(--wc); color: #fff; }
+.gx-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.gx-main b { font-weight: 600; font-size: 15px; }
+.gx-main .kcal { font-size: 12px; }
+.gx-best { flex: none; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.gx-body { padding: 0 12px 10px; }
+.gx-tip { margin: 0 0 8px; font-size: 13px; color: var(--muted); }
+.gx-set { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+.gx-set > .kcal:first-child { flex: 1; font-size: 13px; }
+.gx-set input { width: 64px; height: 38px; text-align: center; font: inherit; font-weight: 600; color: var(--text); background: var(--card);
+  border: 1px solid var(--line); border-radius: 8px; font-variant-numeric: tabular-nums; }
+.gx-set input:focus { outline: none; border-color: var(--wc); }
+.gx-set input::placeholder { color: var(--muted); opacity: .6; font-weight: 400; }
+.gx-set .kcal { font-size: 12px; }
+.gx-add { margin: 4px 0 0; padding: 4px 0; }
+.gt-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.gt-actions .link-btn { margin: 0; align-self: flex-start; }
+.gt-finish { font: inherit; font-weight: 600; padding: 12px; border-radius: 10px; border: 0; background: var(--text); color: var(--bg); cursor: pointer; }
+.gt-finish.undo { background: transparent; color: var(--wc); border: 1px solid var(--wc); }
+
+.gym-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin: 0 0 4px; scrollbar-width: none; }
+.gym-chips button { flex: none; font: inherit; font-size: 14px; padding: 7px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--text); cursor: pointer; }
+.gym-chips button[aria-pressed="true"] { border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text); }
+.gym-progress { padding: 14px 16px 8px; }
+.gp-label { font-size: 11px; letter-spacing: .08em; }
+.gp-big { display: flex; align-items: baseline; gap: 6px; margin: 2px 0; }
+.gp-big b { font-size: 44px; font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.gp-up { color: #46c35a; } .gp-down { color: var(--warn); }
+.pchart { width: 100%; display: block; margin-top: 10px; }
+.pchart line { stroke: var(--line); stroke-width: 1; }
+.pchart text { fill: var(--muted); font-size: 10px; font-weight: 700; }
+.pchart text.d { font-weight: 400; }
+.pchart polyline { fill: none; stroke: var(--text); stroke-width: 2; stroke-linejoin: round; }
+.pchart circle { fill: var(--text); }
+.pchart circle.last { stroke: var(--accent); stroke-width: 3; }
+
+.gp-day { padding: 0 16px; }
+.gp-day summary { display: flex; align-items: center; gap: 10px; padding: 12px 0; cursor: pointer; list-style: none; }
+.gp-day summary::-webkit-details-marker { display: none; }
+.gp-day summary b { flex: 1; font-weight: 600; }
+.gp-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--wc); flex: none; }
+.gp-day ol { margin: 0 0 6px; padding-left: 20px; }
+.gp-day li { padding: 4px 0; }
+.gp-day li span { margin-right: 6px; }
+.gp-day li small { display: block; font-size: 12px; }
+.img-dialog { padding: 0; border: 0; background: none; max-width: min(96vw, 640px); }
+.img-dialog::backdrop { background: rgba(0, 0, 0, .8); }
+.img-dialog img { display: block; width: 100%; height: auto; border-radius: 12px; }

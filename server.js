@@ -54,9 +54,10 @@ function loadState() {
       routine: s.routine || structuredClone(plan.routine),
       settings: { city: DEFAULT_CITY, ...s.settings },
       food: s.food || {},
+      workouts: s.workouts || {},
     };
   } catch {
-    return { checks: {}, weights: [], counters: {}, snapshots: {}, routine: structuredClone(plan.routine), settings: { city: DEFAULT_CITY }, food: {} };
+    return { checks: {}, weights: [], counters: {}, snapshots: {}, routine: structuredClone(plan.routine), settings: { city: DEFAULT_CITY }, food: {}, workouts: {} };
   }
 }
 
@@ -248,6 +249,7 @@ async function handleApi(req, res, route) {
       snapshots: ok(body.snapshots, false) ? body.snapshots : {},
       settings: { city: DEFAULT_CITY, ...(ok(body.settings, false) ? body.settings : {}) },
       food: ok(body.food, false) ? body.food : {},
+      workouts: ok(body.workouts, false) ? body.workouts : {},
     };
   } else if (route === '/api/settings/city') {
     const lat = Number(body.lat);
@@ -273,6 +275,29 @@ async function handleApi(req, res, route) {
     const prefix = body.scope === 'meals' ? 'meal:' : body.scope === 'shopping' ? 'shop:' : null;
     if (!prefix) return send(res, 400, { error: 'scope must be meals or shopping' });
     for (const id of Object.keys(state.checks)) if (id.startsWith(prefix)) delete state.checks[id];
+  } else if (route === '/api/workout') {
+    // Тренировка за дату: подходы по упражнению ({ex, sets: [[кг, повторы], …]}) и/или отметка «завершена»
+    const date = String(body.date);
+    const day = plan.workout.days.find((d) => d.id === body.day);
+    if (!DATE_RE.test(date) || !day) return send(res, 400, { error: 'Неизвестная тренировка' });
+    const w = state.workouts[date] && state.workouts[date].day === day.id ? state.workouts[date] : { day: day.id, ex: {} };
+    if (body.ex !== undefined) {
+      const spec = day.ex.find((e) => e.id === body.ex);
+      if (!spec || !Array.isArray(body.sets)) return send(res, 400, { error: 'Неизвестное упражнение' });
+      const num = (v, max) => (v === '' || v == null ? null : Math.round(Number(String(v).replace(',', '.')) * 10) / 10);
+      const sets = body.sets.slice(0, 10).map((x) => (Array.isArray(x) ? [num(x[0]), num(x[1])] : [null, null]));
+      if (sets.some(([a, b]) => (a !== null && !(a >= 0 && a <= 1000)) || (b !== null && !(b >= 0 && b <= 1000)))) {
+        return send(res, 400, { error: 'Вес и повторы — числа' });
+      }
+      if (sets.some(([a, b]) => a !== null || b !== null)) w.ex[spec.id] = sets;
+      else delete w.ex[spec.id];
+    }
+    if (body.done !== undefined) {
+      if (body.done) w.done = w.done || new Date().toISOString();
+      else delete w.done;
+    }
+    if (Object.keys(w.ex).length || w.done) state.workouts[date] = w;
+    else delete state.workouts[date];
   } else if (route === '/api/weight') {
     const kg = Number(body.kg);
     const date = String(body.date || '');
