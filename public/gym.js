@@ -109,16 +109,16 @@ function renderGymToday() {
     <h2 class="gt-title">${gymDate === today ? 'Сегодня — ' : ''}${esc(day.title)}</h2>
     <div class="kcal">${day.ex.length} упражнений · 45–60 мин${w && w.done ? ' · <b class="gt-ok">завершена ✓</b>' : ''}</div>
     ${picker}
-    <div class="gx-list">${day.ex.map((e, i) => exHtml(e, i)).join('')}</div>
+    <div class="gx-list">${day.ex.map((e, i) => exHtml(e, i, day)).join('')}</div>
     <div class="gt-actions">
-      <button class="link-btn" data-gym-img="${day.id}">Техника — картинка</button>
+      <button class="link-btn" data-gym-img="${day.id}">Весь план дня — картинка</button>
       ${w && w.done
         ? '<button class="gt-finish undo" data-gym-done="0">Тренировка завершена ✓ · отменить</button>'
         : '<button class="gt-finish" data-gym-done="1">Завершить тренировку</button>'}
     </div>`;
 }
 
-function exHtml(e, i) {
+function exHtml(e, i, day) {
   const sec = isSec(e);
   const sets = setsOf(gymDate, e.id);
   const last = lastSession(e.id, gymDate);
@@ -134,13 +134,14 @@ function exHtml(e, i) {
       <span class="gx-best">${best ? setText(best, sec) : ''}</span>
     </button>
     ${open ? `<div class="gx-body">
+      <img class="gx-img" src="img/workout/${day.id}-${i + 1}.jpg" data-gym-img-src="img/workout/${day.id}-${i + 1}.jpg" alt="Техника: ${esc(exName(e))}" loading="lazy">
       <p class="gx-tip">🎯 ${esc(e.tip)}</p>
       ${[...Array(rows)].map((_, k) => {
         const [kg, reps] = sets[k] || [];
         const [pkg, preps] = (last && last.sets[k]) || [];
         return `<div class="gx-set"><span class="kcal">Подход ${k + 1}</span>
-          ${sec ? '' : `<input inputmode="decimal" data-gs="${e.id}" data-k="${k}" data-f="0" value="${kg == null ? '' : fmtNum(kg)}" placeholder="${pkg == null ? 'кг' : fmtNum(pkg)}" aria-label="Вес, кг"><span class="kcal">кг ×</span>`}
-          <input inputmode="numeric" data-gs="${e.id}" data-k="${k}" data-f="1" value="${reps ?? ''}" placeholder="${preps ?? (sec ? 'сек' : 'повт')}" aria-label="${sec ? 'Секунды' : 'Повторы'}">
+          ${sec ? '' : `<input inputmode="decimal" data-gs="${e.id}" data-k="${k}" data-f="0" value="${kg == null ? '' : fmtNum(kg)}" placeholder="${pkg == null ? '–' : fmtNum(pkg)}" aria-label="Вес, кг"><span class="kcal">кг ×</span>`}
+          <input inputmode="numeric" data-gs="${e.id}" data-k="${k}" data-f="1" value="${reps ?? ''}" placeholder="${preps ?? '–'}" aria-label="${sec ? 'Секунды' : 'Повторы'}">
           <span class="kcal">${sec ? 'сек' : 'повт'}</span></div>`;
       }).join('')}
       <button class="link-btn gx-add" data-gs-add="${e.id}">+ подход</button>
@@ -203,7 +204,8 @@ function renderGymProgram() {
   $('#gym-program').innerHTML = wDays().map((d) => `
     <details class="card gp-day" style="--wc:${d.color}">
       <summary><span class="gp-dot"></span><b>${WD[d.dow]} · ${esc(d.title)}</b><span class="kcal">${d.ex.length} упр.</span></summary>
-      <ol>${d.ex.map((e) => `<li><span>${esc(exName(e))}</span><b>${e.sets}×${esc(e.reps)}</b><small class="kcal">${esc(e.tip)}</small></li>`).join('')}</ol>
+      <ol>${d.ex.map((e, i) => `<li><span>${esc(exName(e))}</span><b>${e.sets}×${esc(e.reps)}</b><small class="kcal">${esc(e.tip)}</small>
+        <img class="gx-img" src="img/workout/${d.id}-${i + 1}.jpg" data-gym-img-src="img/workout/${d.id}-${i + 1}.jpg" alt="" loading="lazy"></li>`).join('')}</ol>
       <button class="link-btn" data-gym-img="${d.id}">Техника — картинка</button>
     </details>`).join('') + `<ul class="card rules">${plan.workout.notes.map((n) => `<li>${esc(n)}</li>`).join('')}</ul>`;
 }
@@ -298,9 +300,9 @@ document.addEventListener('click', async (e) => {
   }
   const prog = t.closest('[data-gym-prog]');
   if (prog) { gymProgress = prog.dataset.gymProg; return renderGymProgress(); }
-  const img = t.closest('[data-gym-img]');
-  if (img) {
-    $('#img-dialog img').src = `img/workout/${img.dataset.gymImg}.jpg`;
+  const img = t.closest('[data-gym-img], [data-gym-img-src]');
+  if (img && !t.closest('#img-dialog')) {
+    $('#img-dialog img').src = img.dataset.gymImgSrc || `img/workout/${img.dataset.gymImg}.jpg`;
     return $('#img-dialog').showModal();
   }
   if (t.closest('#img-dialog')) $('#img-dialog').close();
