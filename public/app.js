@@ -431,14 +431,25 @@ async function bumpCounter(taskId, step) {
 }
 
 // ——— Дневник питания: сегодня, что съедено на самом деле ———
+// Калории без числа в форме считает Claude на сервере: продукты с граммовкой, ккал и БЖУ.
+const fmt1 = (n) => String(Math.round(n)).replace('.', ',');
 function renderFood() {
   const today = ymd(new Date());
   const list = (state.food && state.food[today]) || [];
   const total = list.reduce((sum, x) => sum + (x.kcal || 0), 0);
-  $('#food-total').textContent = list.length ? `~${total} ккал из ~${plan.summary.kcal}` : '';
+  const m = plan.summary.macros || {};
+  const sum = (k) => list.reduce((s, x) => s + (x[k] || 0), 0);
+  $('#food-total').textContent = list.length ? `~${total} из ~${plan.summary.kcal} ккал` : '';
+  $('#food-macros').innerHTML = list.some((x) => x.p != null)
+    ? `<span>Б <b>${fmt1(sum('p'))}</b>${m.protein ? ' / ' + m.protein : ''} г</span><span>Ж <b>${fmt1(sum('f'))}</b>${m.fat ? ' / ' + m.fat : ''} г</span><span>У <b>${fmt1(sum('c'))}</b>${m.carbs ? ' / ' + m.carbs : ''} г</span>`
+    : '';
   $('#food-list').innerHTML = list.length
     ? list.map((x) => `<div class="food-item">
-        <div><span class="kcal">${esc(x.meal)}</span><div>${esc(x.text)}</div></div>
+        <div><span class="kcal">${esc(x.meal)}</span><div>${esc(x.text)}</div>
+          ${x.items && x.items.length ? `<details class="food-parts"><summary class="kcal">${x.items.length > 1 ? 'Из чего: ' + x.items.length + ' поз.' : 'Подробнее'} · Б ${fmt1(x.p)} Ж ${fmt1(x.f)} У ${fmt1(x.c)}</summary>
+            ${x.items.map((it) => `<div class="kcal">${esc(it.name)} · ${it.grams} г — ${it.kcal} ккал</div>`).join('')}</details>` : ''}
+          ${x.kcal == null && plan.ai ? `<button class="link-btn food-recalc" data-food-recalc="${x.id}">Посчитать калории</button>` : ''}
+        </div>
         <span class="kcal">${x.kcal != null ? '~' + x.kcal : ''}</span>
         <button data-food-del="${x.id}" aria-label="Удалить">×</button>
       </div>`).join('')
@@ -658,6 +669,19 @@ document.addEventListener('click', async (e) => {
     return;
   }
 
+  const frec = e.target.closest('[data-food-recalc]');
+  if (frec) {
+    frec.disabled = true;
+    frec.textContent = 'Считаю…';
+    try {
+      await write('/api/food/recalc', { date: ymd(new Date()), id: frec.dataset.foodRecalc });
+    } catch (err) {
+      toast('Не посчиталось: ' + err.message);
+    }
+    renderFood();
+    return;
+  }
+
   const fdel = e.target.closest('[data-food-del]');
   if (fdel) {
     if (!confirm('Удалить запись?')) return;
@@ -686,13 +710,21 @@ $('#task-form').addEventListener('submit', saveTask);
 $('#food-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const f = e.target;
+  const btn = f.querySelector('button[type=submit]');
+  const counting = !f.kcal.value && plan.ai;
+  btn.disabled = true;
+  btn.textContent = counting ? 'Считаю…' : 'Записываю…';
   try {
-    await write('/api/food', { date: ymd(new Date()), meal: f.meal.value, text: f.text.value, kcal: f.kcal.value });
+    const res = await write('/api/food', { date: ymd(new Date()), meal: f.meal.value, text: f.text.value, kcal: f.kcal.value });
     f.text.value = '';
     f.kcal.value = '';
     renderFood();
+    if (res.warning) toast(res.warning);
   } catch (err) {
     toast('Ошибка: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Записать';
   }
 });
 $('#city-q').addEventListener('input', () => {

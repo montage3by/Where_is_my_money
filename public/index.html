@@ -44,6 +44,7 @@
       <div class="days" id="days"></div>
       <div class="card" id="day-card"></div>
       <h3 class="cat"><span>Съедено на самом деле</span><span id="food-total"></span></h3>
+      <div class="food-macros kcal" id="food-macros"></div>
       <div class="card food" id="food-list"></div>
       <form class="card food-form" id="food-form">
         <div class="seg food-meal">
@@ -52,9 +53,9 @@
           <label><input type="radio" name="meal" value="Ужин"><span>Ужин</span></label>
           <label><input type="radio" name="meal" value="Перекус"><span>Перекус</span></label>
         </div>
-        <input name="text" placeholder="Что съел: йогурт 180 г + 2 банана" maxlength="300" autocomplete="off">
+        <input name="text" placeholder="Что съел: хачапури по-аджарски и кофе с молоком" maxlength="300" autocomplete="off">
         <div class="food-row">
-          <input name="kcal" type="number" inputmode="numeric" min="0" max="5000" placeholder="ккал (если знаешь)">
+          <input name="kcal" type="number" inputmode="numeric" min="0" max="5000" placeholder="ккал — посчитаю сам">
           <button type="submit">Записать</button>
         </div>
       </form>

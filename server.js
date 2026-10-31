@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const plan = require('./plan');
+const ai = require('./ai');
 const { info, searchCity, DEFAULT_CITY } = require('./info');
 
 const PORT = Number(process.env.PORT) || 3000;
@@ -151,6 +152,9 @@ const MIGRATIONS = [
     ];
     for (const t of tasks) if (!has(t.id)) st.routine.push({ ...t, date });
   }],
+  ['2026-11-01-docs', (st) => {
+    if (!st.routine.some((t) => t.id === 'docs-1101')) st.routine.push({ id: 'docs-1101', title: 'Проверить билеты и документы', date: '2026-11-01' });
+  }],
 ];
 let migrated = false;
 for (const [id, fn] of MIGRATIONS) {
@@ -217,7 +221,7 @@ function serveStatic(req, res) {
 }
 
 async function handleApi(req, res, route) {
-  if (req.method === 'GET' && route === '/api/plan') return send(res, 200, { ...plan, routine: state.routine });
+  if (req.method === 'GET' && route === '/api/plan') return send(res, 200, { ...plan, routine: state.routine, ai: ai.enabled() });
   if (req.method === 'GET' && route === '/api/state') return send(res, 200, state);
   if (req.method === 'GET' && route === '/api/info') return send(res, 200, await info(state.settings.city));
   if (req.method === 'GET' && route === '/api/geo') {
@@ -298,13 +302,38 @@ async function handleApi(req, res, route) {
     const tz = /^[A-Za-z_]+(\/[A-Za-z_+-]+)*$/.test(String(body.tz)) ? String(body.tz) : 'auto';
     state.settings.city = { name, country: String(body.country || '').slice(0, 80), lat, lon, tz };
   } else if (route === '/api/food') {
-    // Дневник питания: что съедено на самом деле, по датам
+    // Дневник питания: что съедено на самом деле, по датам. Калории не указаны — считает Claude.
     const date = String(body.date);
     const text = String(body.text || '').trim().slice(0, 300);
     const meal = String(body.meal || '').trim().slice(0, 30);
     const kcal = body.kcal === '' || body.kcal == null ? null : Math.round(Number(body.kcal));
     if (!DATE_RE.test(date) || !text || (kcal !== null && !(kcal >= 0 && kcal <= 5000))) return send(res, 400, { error: 'Нужно описание и калории числом' });
-    (state.food[date] = state.food[date] || []).push({ id: crypto.randomBytes(4).toString('hex'), meal, text, kcal, at: new Date().toISOString() });
+    const entry = { id: crypto.randomBytes(4).toString('hex'), meal, text, kcal, at: new Date().toISOString() };
+    let warning;
+    if (kcal === null) {
+      if (!ai.enabled()) warning = 'Записал без калорий: подсчёт не настроен (нужен ANTHROPIC_API_KEY на Railway)';
+      else {
+        try {
+          Object.assign(entry, await ai.estimateFood(text), { auto: true });
+        } catch (e) {
+          console.error('ai:', e);
+          warning = `Записал без калорий: ${ai.errorText(e)}. Можно пересчитать позже`;
+        }
+      }
+    }
+    (state.food[date] = state.food[date] || []).push(entry);
+    saveState();
+    return send(res, 200, { ...state, warning });
+  } else if (route === '/api/food/recalc') {
+    const entry = (state.food[String(body.date)] || []).find((x) => x.id === body.id);
+    if (!entry) return send(res, 404, { error: 'Запись не найдена' });
+    if (!ai.enabled()) return send(res, 503, { error: 'Подсчёт не настроен: добавь ANTHROPIC_API_KEY в Variables на Railway' });
+    try {
+      Object.assign(entry, await ai.estimateFood(entry.text), { auto: true });
+    } catch (e) {
+      console.error('ai:', e);
+      return send(res, 502, { error: ai.errorText(e) });
+    }
   } else if (route === '/api/food/delete') {
     const list = state.food[String(body.date)];
     if (!list) return send(res, 404, { error: 'Запись не найдена' });
