@@ -152,6 +152,13 @@ const MIGRATIONS = [
     ];
     for (const t of tasks) if (!has(t.id)) st.routine.push({ ...t, date });
   }],
+  // Воскресенье 1 ноября — выходной: работа, HH и ПДД на этот день скрыты (в другие дни — как обычно)
+  ['2026-11-01-dayoff', (st) => {
+    for (const t of st.routine) {
+      if (t.date || t.once || !/^работа|\bhh\b|пдд/i.test(t.title)) continue;
+      t.skip = [...new Set([...(t.skip || []), '2026-11-01'])];
+    }
+  }],
   ['2026-11-01-docs', (st) => {
     if (!st.routine.some((t) => t.id === 'docs-1101')) st.routine.push({ id: 'docs-1101', title: 'Проверить билеты и документы', date: '2026-11-01' });
   }],
