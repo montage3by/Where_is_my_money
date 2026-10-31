@@ -144,7 +144,7 @@ const MIGRATIONS = [
     }
     const tasks = [
       { id: 'clean-home-1101', title: 'Убраться дома' },
-      { id: 'gym-1101', title: 'Спортзал: бицепс + трицепс',
+      { id: 'gym-1101', title: 'Спортзал: жим лёжа + бицепс + трицепс',
         details: 'Тренировка «Руки» — во вкладке «Тренировки». «Завершить тренировку» отметит это дело.' },
       { id: 'svan-salt-1101', title: 'Купить сванскую соль' },
       { id: 'clean-room-1101', title: 'Убраться в номере' },
@@ -158,6 +158,10 @@ const MIGRATIONS = [
       if (t.date || t.once || !/^работа|\bhh\b|пдд/i.test(t.title)) continue;
       t.skip = [...new Set([...(t.skip || []), '2026-11-01'])];
     }
+  }],
+  ['2026-11-01-bench', (st) => {
+    const t = st.routine.find((x) => x.id === 'gym-1101');
+    if (t) t.title = 'Спортзал: жим лёжа + бицепс + трицепс';
   }],
   ['2026-11-01-docs', (st) => {
     if (!st.routine.some((t) => t.id === 'docs-1101')) st.routine.push({ id: 'docs-1101', title: 'Проверить билеты и документы', date: '2026-11-01' });
