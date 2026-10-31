@@ -139,7 +139,11 @@ function gameSummary() {
   const last = today < gameEnd() ? today : gameEnd();
   const days = [];
   for (let d = gameStart(); d <= last; d = addDays(d, 1)) days.push(dayCalc(d));
-  const total = days.reduce((a, d) => a + d.net, 0);
+  // Опыт, выставленный вручную (plan.game.set), заменяет всё, что было до дня from
+  const set = plan.game && plan.game.set;
+  const total = set
+    ? set.xp + days.filter((d) => d.date >= set.from).reduce((a, d) => a + d.net, 0)
+    : days.reduce((a, d) => a + d.net, 0);
   const stats = Object.fromEntries(STAT_KEYS.map((k) => [k, 0]));
   const weekAgo = Object.fromEntries(STAT_KEYS.map((k) => [k, 0]));
   const weekCut = addDays(today, -7);
