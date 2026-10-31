@@ -22,8 +22,10 @@ function dayFor(date) {
   if (gymPick[date]) return wDay(gymPick[date]);
   const w = workouts()[date];
   if (w && wDay(w.day)) return wDay(w.day);
+  const dated = wDays().find((d) => d.date === date);
+  if (dated) return dated;
   const dow = new Date(date + 'T00:00').getDay();
-  return wDays().find((d) => d.dow === dow) || null;
+  return wDays().find((d) => d.dow === dow && !d.date) || null;
 }
 
 function setsOf(date, exId) {
@@ -111,7 +113,7 @@ function renderGymToday() {
     ${picker}
     <div class="gx-list">${day.ex.map((e, i) => exHtml(e, i, day)).join('')}</div>
     <div class="gt-actions">
-      <button class="link-btn" data-gym-img="${day.id}">Весь план дня — картинка</button>
+      ${day.noCard ? '' : `<button class="link-btn" data-gym-img="${day.id}">Весь план дня — картинка</button>`}
       ${w && w.done
         ? '<button class="gt-finish undo" data-gym-done="0">Тренировка завершена ✓ · отменить</button>'
         : '<button class="gt-finish" data-gym-done="1">Завершить тренировку</button>'}
@@ -203,10 +205,10 @@ function renderGymProgress() {
 function renderGymProgram() {
   $('#gym-program').innerHTML = wDays().map((d) => `
     <details class="card gp-day" style="--wc:${d.color}">
-      <summary><span class="gp-dot"></span><b>${WD[d.dow]} · ${esc(d.title)}</b><span class="kcal">${d.ex.length} упр.</span></summary>
+      <summary><span class="gp-dot"></span><b>${d.date ? shortDate(d.date) : WD[d.dow]} · ${esc(d.title)}</b><span class="kcal">${d.ex.length} упр.</span></summary>
       <ol>${d.ex.map((e, i) => `<li><span>${esc(exName(e))}</span><b>${e.sets}×${esc(e.reps)}</b><small class="kcal">${esc(e.tip)}</small>
         <img class="gx-img" src="img/workout/${d.id}-${i + 1}.jpg" data-gym-img-src="img/workout/${d.id}-${i + 1}.jpg" alt="" loading="lazy"></li>`).join('')}</ol>
-      <button class="link-btn" data-gym-img="${d.id}">Техника — картинка</button>
+      ${d.noCard ? '' : `<button class="link-btn" data-gym-img="${d.id}">Техника — картинка</button>`}
     </details>`).join('') + `<ul class="card rules">${plan.workout.notes.map((n) => `<li>${esc(n)}</li>`).join('')}</ul>`;
 }
 

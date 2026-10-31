@@ -124,6 +124,7 @@ function tasksFor(date) {
 const sortKey = (t) => t.start || t.end || '99:99';
 const visibleTasks = (date) => tasksFor(date).filter((t) => {
   if (t.date) return t.date === date;
+  if (t.skip && t.skip.includes(date)) return false;
   if (t.from && date < t.from) return false;
   if (t.days && !t.days.includes(new Date(date + 'T00:00').getDay())) return false;
   if (!t.once) return true;

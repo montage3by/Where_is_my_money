@@ -30,6 +30,7 @@ const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(ne
 // Дни недели — как Date.getDay(): 0 воскресенье … 6 суббота
 const weekday = (date) => new Date(`${date}T12:00:00Z`).getUTCDay();
 const dailyRoutine = (date) => state.routine.filter((t) => !t.once && (!t.date || t.date === date)
+  && !(t.skip && t.skip.includes(date))
   && (!t.from || t.from <= date) && (!t.days || t.days.includes(weekday(date))));
 
 function snapshotDay(date) {
@@ -55,9 +56,10 @@ function loadState() {
       settings: { city: DEFAULT_CITY, ...s.settings },
       food: s.food || {},
       workouts: s.workouts || {},
+      migrations: s.migrations || [],
     };
   } catch {
-    return { checks: {}, weights: [], counters: {}, snapshots: {}, routine: structuredClone(plan.routine), settings: { city: DEFAULT_CITY }, food: {}, workouts: {} };
+    return { checks: {}, weights: [], counters: {}, snapshots: {}, routine: structuredClone(plan.routine), settings: { city: DEFAULT_CITY }, food: {}, workouts: {}, migrations: [] };
   }
 }
 
@@ -68,6 +70,8 @@ function cleanTask(input, existing) {
   if (!title) throw new Error('Нужно название');
   const t = { id: existing ? existing.id : 't' + crypto.randomBytes(4).toString('hex'), title };
   if (existing && existing.meal !== undefined) t.meal = existing.meal;
+  // skip — даты, в которые ежедневное дело заменено отдельным (например, другое время подъёма)
+  if (existing && existing.skip) t.skip = existing.skip;
   for (const k of ['start', 'end']) {
     const v = str(input[k], 5);
     if (!v) continue;
@@ -120,6 +124,41 @@ function cleanTask(input, existing) {
 }
 
 let state = loadState();
+
+// Правки живого списка дел из кода: каждая применяется один раз (id — в state.migrations).
+// Нужны, когда дела ставит Claude, а не через сайт.
+const MIGRATIONS = [
+  ['2026-11-01-tasks', (st) => {
+    const date = '2026-11-01';
+    const has = (id) => st.routine.some((t) => t.id === id);
+    // Подъём в 9:00: ежедневное «Утро» на этот день прячется, вместо него — своё
+    const morning = st.routine.find((t) => t.id === 'morning');
+    if (morning && !has('morning-1101')) {
+      morning.skip = [...new Set([...(morning.skip || []), date])];
+      const copy = { ...structuredClone(morning), id: 'morning-1101', date, start: '09:00', end: '10:30',
+        details: 'Подъём в 9:00.' };
+      delete copy.skip; delete copy.days; delete copy.from;
+      if (copy.subtasks) copy.subtasks = copy.subtasks.map((x) => x.replace(/^Подъём.*/i, 'Подъём в 9:00'));
+      st.routine.splice(st.routine.indexOf(morning) + 1, 0, copy);
+    }
+    const tasks = [
+      { id: 'clean-home-1101', title: 'Убраться дома' },
+      { id: 'gym-1101', title: 'Спортзал: бицепс + трицепс',
+        details: 'Тренировка «Руки» — во вкладке «Тренировки». «Завершить тренировку» отметит это дело.' },
+      { id: 'svan-salt-1101', title: 'Купить сванскую соль' },
+      { id: 'clean-room-1101', title: 'Убраться в номере' },
+      { id: 'suitcase-1101', title: 'Собрать чемодан' },
+    ];
+    for (const t of tasks) if (!has(t.id)) st.routine.push({ ...t, date });
+  }],
+];
+let migrated = false;
+for (const [id, fn] of MIGRATIONS) {
+  if (state.migrations.includes(id)) continue;
+  fn(state);
+  state.migrations.push(id);
+  migrated = true;
+}
 
 function saveState() {
   fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -333,6 +372,8 @@ const server = http.createServer((req, res) => {
   }
   serveStatic(req, res);
 });
+
+if (migrated) saveState();
 
 server.listen(PORT, () => {
   console.log(`Tracker on :${PORT}, data in ${STATE_FILE}${PASSWORD ? ', password on' : ''}`);
