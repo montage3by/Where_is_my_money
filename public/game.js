@@ -144,10 +144,13 @@ function gameSummary() {
   const total = set
     ? set.xp + days.filter((d) => d.date >= set.from).reduce((a, d) => a + d.net, 0)
     : days.reduce((a, d) => a + d.net, 0);
-  const stats = Object.fromEntries(STAT_KEYS.map((k) => [k, 0]));
-  const weekAgo = Object.fromEntries(STAT_KEYS.map((k) => [k, 0]));
+  // Выставленные вручную характеристики заменяют набранное до дня from
+  const base = (k) => (set && set.stats ? set.stats[k] || 0 : 0);
+  const stats = Object.fromEntries(STAT_KEYS.map((k) => [k, base(k)]));
+  const weekAgo = Object.fromEntries(STAT_KEYS.map((k) => [k, base(k)]));
   const weekCut = addDays(today, -7);
   for (const d of days) {
+    if (set && set.stats && d.date < set.from) continue;
     for (const [k, v] of Object.entries(d.byStat)) {
       stats[k] += v;
       if (d.date <= weekCut) weekAgo[k] += v;
