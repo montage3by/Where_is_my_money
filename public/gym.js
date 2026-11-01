@@ -22,6 +22,7 @@ function dayFor(date) {
   if (gymPick[date]) return wDay(gymPick[date]);
   const w = workouts()[date];
   if (w && wDay(w.day)) return wDay(w.day);
+  if (plan.workout.off && plan.workout.off[date]) return null;
   const dated = wDays().find((d) => d.date === date);
   if (dated) return dated;
   const dow = new Date(date + 'T00:00').getDay();
@@ -100,8 +101,8 @@ function renderGymToday() {
   const picker = `<div class="gt-pick">${wDays().map((d) => `<button data-gym-day="${d.id}" style="--wc:${d.color}" aria-pressed="${day && day.id === d.id}">${d.short}</button>`).join('')}</div>`;
   if (!day) {
     $('#gym-today').innerHTML = `<div class="gt-head"><span class="kcal">ЗАЛ · ${when.toUpperCase()}</span></div>
-      <h2 class="gt-title">Отдых 😴</h2>
-      <p class="kcal">По плану зал пн–пт. Если хочешь потренироваться сегодня — выбери тренировку:</p>${picker}`;
+      <h2 class="gt-title">${esc((plan.workout.off && plan.workout.off[gymDate]) || 'Отдых 😴')}</h2>
+      <p class="kcal">${plan.workout.off && plan.workout.off[gymDate] ? 'В этот день зала нет.' : 'По плану зал пн–пт.'} Если хочешь потренироваться — выбери тренировку:</p>${picker}`;
     return;
   }
   const doneN = day.ex.filter((e) => exDone(e, setsOf(gymDate, e.id))).length;

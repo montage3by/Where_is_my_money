@@ -163,6 +163,13 @@ const MIGRATIONS = [
     const t = st.routine.find((x) => x.id === 'gym-1101');
     if (t) t.title = 'Спортзал: жим лёжа + бицепс + трицепс';
   }],
+  // Понедельник 2 ноября — перелёт: все дела в этот день скрыты
+  ['2026-11-02-flight', (st) => {
+    for (const t of st.routine) {
+      if (t.date && t.date !== '2026-11-02') continue;
+      t.skip = [...new Set([...(t.skip || []), '2026-11-02'])];
+    }
+  }],
   ['2026-11-01-docs', (st) => {
     if (!st.routine.some((t) => t.id === 'docs-1101')) st.routine.push({ id: 'docs-1101', title: 'Проверить билеты и документы', date: '2026-11-01' });
   }],
