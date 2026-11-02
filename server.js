@@ -170,6 +170,13 @@ const MIGRATIONS = [
       t.skip = [...new Set([...(t.skip || []), '2026-11-02'])];
     }
   }],
+  // Без HH и ПДД; утро: подъём, зарядка, время с Марком в 7:00, завтрак, с 8:00 работа
+  ['2026-11-03-morning', (st) => {
+    st.routine = st.routine.filter((t) => t.date || t.once || !/\bhh\b|пдд/i.test(t.title));
+    const m = st.routine.find((t) => t.id === 'morning');
+    if (m) Object.assign(m, { start: '06:30', end: '08:00', details: 'В 7:00 — время с Марком. С 8:00 — работа.',
+      subtasks: ['Подъём в 6:30', 'Зарядка', 'Время с Марком (7:00)', 'Завтрак'] });
+  }],
   ['2026-11-01-docs', (st) => {
     if (!st.routine.some((t) => t.id === 'docs-1101')) st.routine.push({ id: 'docs-1101', title: 'Проверить билеты и документы', date: '2026-11-01' });
   }],
