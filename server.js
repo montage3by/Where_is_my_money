@@ -25,7 +25,7 @@ const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 // Распорядок будет меняться: каждый день запоминает свой список дел,
 // чтобы прошлые дни в истории показывались так, как были.
-const TZ = process.env.TZ_NAME || 'Asia/Tbilisi';
+const TZ = process.env.TZ_NAME || 'Europe/Moscow';
 const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(new Date());
 // Список дел редактируется на сайте и живёт в state.routine; plan.routine — только начальный
 // Дни недели — как Date.getDay(): 0 воскресенье … 6 суббота
