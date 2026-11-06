@@ -26,8 +26,23 @@ function dayFor(date) {
   const dated = wDays().find((d) => d.date === date);
   if (dated) return dated;
   const dow = new Date(date + 'T00:00').getDay();
-  return wDays().find((d) => d.dow === dow && !d.date) || null;
+  // Сплит по кругу: номер буднего дня с начала ротации → тренировка
+  const rot = plan.workout.rotation;
+  if (rot && date >= rot.from) {
+    if (!rot.dows.includes(dow)) return null;
+    let n = 0;
+    for (let d = rot.from; d < date; d = addDays(d, 1)) {
+      if (rot.dows.includes(new Date(d + 'T00:00').getDay()) && !(plan.workout.off && plan.workout.off[d])) n++;
+    }
+    return wDay(rot.order[n % rot.order.length]) || null;
+  }
+  return wDays().find((d) => d.dow === dow && !d.date && !d.from && (!d.until || date <= d.until)) || null;
 }
+
+// Программа, действующая на эту дату (для выбора тренировки вручную и списка программы)
+const activeDays = (date) => wDays().filter((d) => (!d.until || date <= d.until) && (!d.from || date >= d.from) && (!d.date || d.date === date));
+// Фото техники: своё у упражнения (img), иначе по номеру в дне; у новых дней без своих фото — нет
+const exImg = (day, e, i) => (e.img ? `img/workout/${e.img}.jpg` : day.noImgs || day.from ? null : `img/workout/${day.id}-${i + 1}.jpg`);
 
 function setsOf(date, exId) {
   const w = workouts()[date];
@@ -98,7 +113,7 @@ function renderGymToday() {
   const w = workouts()[gymDate];
   const today = ymd(new Date());
   const when = gymDate === today ? 'Сегодня' : new Date(gymDate + 'T00:00').toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
-  const picker = `<div class="gt-pick">${wDays().map((d) => `<button data-gym-day="${d.id}" style="--wc:${d.color}" aria-pressed="${day && day.id === d.id}">${d.short}</button>`).join('')}</div>`;
+  const picker = `<div class="gt-pick">${activeDays(gymDate).map((d) => `<button data-gym-day="${d.id}" style="--wc:${d.color}" aria-pressed="${day && day.id === d.id}">${d.short}</button>`).join('')}</div>`;
   if (!day) {
     $('#gym-today').innerHTML = `<div class="gt-head"><span class="kcal">ЗАЛ · ${when.toUpperCase()}</span></div>
       <h2 class="gt-title">${esc((plan.workout.off && plan.workout.off[gymDate]) || 'Отдых 😴')}</h2>
@@ -137,7 +152,7 @@ function exHtml(e, i, day) {
       <span class="gx-best">${best ? setText(best, sec) : ''}</span>
     </button>
     ${open ? `<div class="gx-body">
-      <img class="gx-img" src="img/workout/${day.id}-${i + 1}.jpg" data-gym-img-src="img/workout/${day.id}-${i + 1}.jpg" alt="Техника: ${esc(exName(e))}" loading="lazy">
+      ${exImg(day, e, i) ? `<img class="gx-img" src="${exImg(day, e, i)}" data-gym-img-src="${exImg(day, e, i)}" alt="Техника: ${esc(exName(e))}" loading="lazy">` : ''}
       <p class="gx-tip">🎯 ${esc(e.tip)}</p>
       ${[...Array(rows)].map((_, k) => {
         const [kg, reps] = sets[k] || [];
@@ -204,11 +219,13 @@ function renderGymProgress() {
 }
 
 function renderGymProgram() {
-  $('#gym-program').innerHTML = wDays().map((d) => `
+  const today = ymd(new Date());
+  const shown = wDays().filter((d) => (!d.until || d.until >= today) && (!d.date || d.date >= today));
+  $('#gym-program').innerHTML = shown.map((d) => `
     <details class="card gp-day" style="--wc:${d.color}">
-      <summary><span class="gp-dot"></span><b>${d.date ? shortDate(d.date) : WD[d.dow]} · ${esc(d.title)}</b><span class="kcal">${d.ex.length} упр.</span></summary>
+      <summary><span class="gp-dot"></span><b>${d.date ? shortDate(d.date) : d.dow != null ? WD[d.dow] : 'с ' + shortDate(d.from)} · ${esc(d.title)}</b><span class="kcal">${d.ex.length} упр.</span></summary>
       <ol>${d.ex.map((e, i) => `<li><span>${esc(exName(e))}</span><b>${e.sets}×${esc(e.reps)}</b><small class="kcal">${esc(e.tip)}</small>
-        <img class="gx-img" src="img/workout/${d.id}-${i + 1}.jpg" data-gym-img-src="img/workout/${d.id}-${i + 1}.jpg" alt="" loading="lazy"></li>`).join('')}</ol>
+        ${exImg(d, e, i) ? `<img class="gx-img" src="${exImg(d, e, i)}" data-gym-img-src="${exImg(d, e, i)}" alt="" loading="lazy">` : ''}</li>`).join('')}</ol>
       ${d.noCard ? '' : `<button class="link-btn" data-gym-img="${d.id}">Техника — картинка</button>`}
     </details>`).join('') + `<ul class="card rules">${plan.workout.notes.map((n) => `<li>${esc(n)}</li>`).join('')}</ul>`;
 }

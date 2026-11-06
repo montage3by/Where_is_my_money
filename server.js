@@ -177,6 +177,14 @@ const MIGRATIONS = [
     if (m) Object.assign(m, { start: '06:30', end: '08:00', details: 'В 7:00 — время с Марком. С 8:00 — работа.',
       subtasks: ['Подъём в 6:30', 'Зарядка', 'Время с Марком (7:00)', 'Завтрак'] });
   }],
+  // 6–8 ноября — без дел
+  ['2026-11-06-off', (st) => {
+    const off = ['2026-11-06', '2026-11-07', '2026-11-08'];
+    for (const t of st.routine) {
+      if (t.date && !off.includes(t.date)) continue;
+      t.skip = [...new Set([...(t.skip || []), ...off])];
+    }
+  }],
   ['2026-11-01-docs', (st) => {
     if (!st.routine.some((t) => t.id === 'docs-1101')) st.routine.push({ id: 'docs-1101', title: 'Проверить билеты и документы', date: '2026-11-01' });
   }],
