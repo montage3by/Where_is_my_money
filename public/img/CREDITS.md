@@ -25,3 +25,17 @@
 | ach-food7 | Japanese: 『上野山内月のまつ』Moon Pine, Uenotitle QS:P1476,ja:"上野山内月のまつ"label QS:Lja,"上野山内月のまつ"label QS:Len,"Moon Pine, Ueno" | Utagawa Hiroshige | Public domain | https://commons.wikimedia.org/wiki/File:100_views_edo_089.jpg |
 | ach-xp5000 | Japanese: 『山下白雨』 - Sanka hakūRainstorm beneath the summittitle QS:P1476,ja:"山下白雨"label QS:Lja,"山下白雨"label QS:Lde,"Gewitter unterhalb des Gipfels"label QS:Len,"Rainstorm beneath the summit"label QS:Lfr,"L'orage sous le sommet" | Katsushika Hokusai | Public domain | https://commons.wikimedia.org/wiki/File:Lightnings_below_the_summit.jpg |
 | ach-final | Hiroshige Fireworks at Ryogoku (version) | Utagawa Hiroshige | Public domain | https://commons.wikimedia.org/wiki/File:Hiroshige_Fireworks_at_Ryogoku_(version).jpg |
+
+## Фото техники упражнений (домашняя программа)
+
+`workout/home-*.jpg` — кадры «старт / финиш» из [free-exercise-db](https://github.com/yuhonas/free-exercise-db), общественное достояние (Unlicense), склеены в карточки.
+
+| Файл | Упражнение в базе |
+|---|---|
+| home-floor-press | Dumbbell_Floor_Press |
+| home-db-row | One-Arm_Dumbbell_Row |
+| home-pushup | Pushups |
+| home-bent-row | Bent_Over_Two-Dumbbell_Row |
+| home-goblet | Goblet_Squat |
+| home-lunge | Dumbbell_Rear_Lunge |
+| home-glute-bridge | Butt_Lift_Bridge |
