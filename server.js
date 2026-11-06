@@ -185,6 +185,7 @@ const MIGRATIONS = [
       t.skip = [...new Set([...(t.skip || []), ...off])];
     }
   }],
+  ['2026-11-06-kazan', (st) => { st.settings.city = { ...DEFAULT_CITY }; }],
   ['2026-11-01-docs', (st) => {
     if (!st.routine.some((t) => t.id === 'docs-1101')) st.routine.push({ id: 'docs-1101', title: 'Проверить билеты и документы', date: '2026-11-01' });
   }],

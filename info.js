@@ -2,7 +2,7 @@
 // Сервер кэширует ответы и при сбое источника отдаёт последние известные данные.
 
 // Погода — для города, выбранного на сайте (по умолчанию Батуми)
-const DEFAULT_CITY = { name: 'Батуми', country: 'Грузия', lat: 41.6168, lon: 41.6367, tz: 'Asia/Tbilisi' };
+const DEFAULT_CITY = { name: 'Казань', country: 'Россия', lat: 55.7887, lon: 49.1221, tz: 'Europe/Moscow' };
 const weatherUrl = (c) => `https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}`
   + '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m'
   + '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code'
