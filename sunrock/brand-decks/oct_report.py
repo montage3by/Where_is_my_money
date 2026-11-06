@@ -5,6 +5,19 @@ OUT = Path(__file__).parent / "oct_report.html"
 KNOT = (Path(__file__).parent / "gpt.html").read_text().split('<symbol id="knot"', 1)[1].split("</symbol>", 1)[0]
 
 CSS = """
+
+@font-face{font-family:ST;src:url(assets/stolzl_light.otf);font-weight:300}
+@font-face{font-family:ST;src:url(assets/stolzl_book.otf);font-weight:350}
+@font-face{font-family:ST;src:url(assets/stolzl_regular.otf);font-weight:400}
+@font-face{font-family:ST;src:url(assets/stolzl_medium.otf);font-weight:500}
+@font-face{font-family:ST;src:url(assets/stolzl_bold.otf);font-weight:700}
+body,body *:not(.knot):not(.knot *),body *::before,body *::after{font-family:ST,sans-serif !important}
+h1{font-weight:500;letter-spacing:1px} h1 .s{font-weight:300}
+.cover .kick{font-weight:500} .cover .kick .s{font-weight:300}
+.kpi .v,.box h3,.step .w,ol.num li::before{font-weight:400}
+body,td,li,p,.d,.sub{font-weight:350}
+th,.kpi .k,.runner{font-weight:500}
+tr.tot td,.up,.em,b{font-weight:500}
 .body{position:absolute;left:80px;right:80px;top:262px;bottom:150px}
 .kpis{display:grid;gap:24px}
 .kpi{border:1px solid var(--line);padding:30px 32px;background:#fff}

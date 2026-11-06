@@ -3,3 +3,5 @@ data/
 .DS_Store
 sunrock/wp/backups/
 __pycache__/
+# licensed font, do not publish
+sunrock/brand-decks/assets/stolzl_*.otf
