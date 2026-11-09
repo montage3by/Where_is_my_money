@@ -1,8 +1,8 @@
 """Minimal WordPress REST client for sunrockresidences.com.
 
-Credentials come from the environment, never from code or chat:
-  SUNROCK_WP_USER          WordPress username of the API user
-  SUNROCK_WP_APP_PASSWORD  Application Password created in wp-admin → Users → Profile
+Credentials: stored as a network secret (Basic, Claude_admin + application password) on the
+cloud environment; the proxy injects it into requests to sunrockresidences.com. Never put
+the password in code, chat or the repo.
 
 Usage:
   python3 sunrock/wp/wp.py me                    # check auth: who am I, which role
@@ -21,9 +21,10 @@ BASE = os.environ.get("SUNROCK_WP_URL", "https://sunrockresidences.com").rstrip(
 
 
 def _auth_header():
-    user, pw = os.environ.get("SUNROCK_WP_USER"), os.environ.get("SUNROCK_WP_APP_PASSWORD")
-    if not user or not pw:
-        sys.exit("SUNROCK_WP_USER / SUNROCK_WP_APP_PASSWORD are not set in this environment")
+    # The real credential lives in the environment's network secrets and is injected by the
+    # proxy (it overwrites this header). Env vars are only a fallback for local runs.
+    user = os.environ.get("SUNROCK_WP_USER", "proxy")
+    pw = os.environ.get("SUNROCK_WP_APP_PASSWORD", "proxy-injected")
     return "Basic " + base64.b64encode(f"{user}:{pw.replace(' ', '')}".encode()).decode()
 
 

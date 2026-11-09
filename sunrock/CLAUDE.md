@@ -9,7 +9,7 @@
 ## WordPress API
 
 - Доступ к сайту через REST API WordPress: `python3 sunrock/wp/wp.py me | get <path> [query] | post <path> <json>`.
-- Ключи только из окружения: `SUNROCK_WP_USER`, `SUNROCK_WP_APP_PASSWORD`. В чат и в репозиторий не писать.
+- Доступ: network secret среды для `sunrockresidences.com` (тип Basic: `Claude_admin` + пароль приложения), прокси подставляет его сам. Если 401 `rest_forbidden` даже на неверный логин — секрет сохранён не как Basic. В чат и в репозиторий пароль не писать.
 - Изменения на живом сайте (post/delete) делать только по явной просьбе и после показа, что именно меняется.
 
 ## Презентации (договорённости)
