@@ -35,6 +35,7 @@
 | home-floor-press | Dumbbell_Floor_Press |
 | home-db-row | One-Arm_Dumbbell_Row |
 | home-pushup | Pushups |
+| home-upright-row | Standing_Dumbbell_Upright_Row |
 | home-bent-row | Bent_Over_Two-Dumbbell_Row |
 | home-goblet | Goblet_Squat |
 | home-lunge | Dumbbell_Rear_Lunge |
