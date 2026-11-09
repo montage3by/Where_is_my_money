@@ -89,7 +89,7 @@ function renderGymWeek() {
     <div class="gw-head">
       <button data-gym-week="-7" aria-label="Прошлая неделя">‹</button>
       <span class="kcal">${shortDate(week[0])} – ${shortDate(week[6])}</span>
-      <span class="kcal">ИТОГИ ${done} из 5</span>
+      <span class="kcal">ИТОГИ ${done} из ${week.filter((d) => dayFor(d)).length}</span>
       <button data-gym-week="7" aria-label="Следующая неделя">›</button>
     </div>
     <div class="gw-days">${week.map((d) => {
@@ -117,7 +117,7 @@ function renderGymToday() {
   if (!day) {
     $('#gym-today').innerHTML = `<div class="gt-head"><span class="kcal">ЗАЛ · ${when.toUpperCase()}</span></div>
       <h2 class="gt-title">${esc((plan.workout.off && plan.workout.off[gymDate]) || 'Отдых 😴')}</h2>
-      <p class="kcal">${plan.workout.off && plan.workout.off[gymDate] ? 'В этот день зала нет.' : 'По плану зал пн–пт.'} Если хочешь потренироваться — выбери тренировку:</p>${picker}`;
+      <p class="kcal">${plan.workout.off && plan.workout.off[gymDate] ? 'В этот день зала нет.' : 'По плану тренировки пн–сб.'} Если хочешь потренироваться — выбери тренировку:</p>${picker}`;
     return;
   }
   const doneN = day.ex.filter((e) => exDone(e, setsOf(gymDate, e.id))).length;
@@ -261,7 +261,7 @@ async function saveSets(exId) {
 // Завершённая тренировка закрывает дело «Спортзал» в «Делах» этого дня
 async function checkGymTask(date, done) {
   if (date > ymd(new Date())) return;
-  const t = visibleTasks(date).find((x) => /спортзал|^зал/i.test(x.title) && !x.subtasks && !x.counter);
+  const t = visibleTasks(date).find((x) => /спортзал|^зал|^тренировка/i.test(x.title) && !x.subtasks && !x.counter);
   if (!t) return;
   const id = `todo:${date}:${t.id}`;
   if (Boolean(state.checks[id]) !== done) await write('/api/check', { ids: [id], done });

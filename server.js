@@ -186,6 +186,13 @@ const MIGRATIONS = [
     }
   }],
   ['2026-11-06-kazan', (st) => { st.settings.city = { ...DEFAULT_CITY }; }],
+  // Вечерняя тренировка дома (PPL) — каждый день, кроме воскресенья
+  ['2026-11-09-workout', (st) => {
+    if (st.routine.some((t) => t.id === 'workout')) return;
+    st.routine.push({ id: 'workout', start: '19:30', title: 'Тренировка',
+      details: 'PPL дома с гантелями — какая сегодня, видно во вкладке «Тренировки». «Завершить тренировку» отметит это дело.',
+      from: '2026-11-09', days: [1, 2, 3, 4, 5, 6] });
+  }],
   ['2026-11-01-docs', (st) => {
     if (!st.routine.some((t) => t.id === 'docs-1101')) st.routine.push({ id: 'docs-1101', title: 'Проверить билеты и документы', date: '2026-11-01' });
   }],
