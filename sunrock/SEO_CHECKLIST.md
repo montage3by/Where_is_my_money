@@ -27,7 +27,7 @@
 
 ### Этап 1. Индексация языковых версий (неделя 1) — главный эффект
 - [ ] **[ВЫ]** Search Console: проверить статус sitemap (должен смениться на «Success»), выгрузить отчёт «Индексирование → Страницы».
-- [x] **[ВЫ]** WPML → Languages → включить вывод hreflang. *(09.11)*
+- [ ] **[ВЫ]** WPML → Languages → включить «Display alternative languages in the head section» (вывод hreflang).
 - [x] **[API]** *(09.11: `wpml_post_pairs.csv`, 131 пара)* Подготовить таблицу соответствий EN↔RU для ~140 пар статей (по дате и теме).
 - [ ] **[ВЫ или API]** Связать переводы в WPML («Connect with translation»); если API WPML не позволит — сделать по готовой таблице в wp-admin.
 - [ ] **[API]** Проверить hreflang + x-default на всех страницах после связывания.
