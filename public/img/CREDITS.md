@@ -36,6 +36,7 @@
 | home-db-row | One-Arm_Dumbbell_Row |
 | home-pushup | Pushups |
 | home-upright-row | Standing_Dumbbell_Upright_Row |
+| home-rear-delt | Bent_Over_Dumbbell_Rear_Delt_Raise_With_Head_On_Bench |
 | home-svend | Svend_Press (на фото — блины; дома — гантель) |
 | home-bent-row | Bent_Over_Two-Dumbbell_Row |
 | home-goblet | Goblet_Squat |
