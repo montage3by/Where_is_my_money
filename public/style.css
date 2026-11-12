@@ -517,3 +517,4 @@ h1 { letter-spacing: 0.04em; }
 .shop { padding: 4px 16px; }
 .shop .task .right { max-width: 45%; text-align: right; }
 .shop-cat { padding: 12px 0 2px; text-transform: uppercase; letter-spacing: .04em; font-size: 11px; }
+.import-btn { text-align: center; margin-top: 0; }

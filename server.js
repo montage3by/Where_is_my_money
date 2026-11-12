@@ -255,7 +255,7 @@ function readBody(req) {
     let data = '';
     req.on('data', (chunk) => {
       data += chunk;
-      if (data.length > 1e5) req.destroy();
+      if (data.length > 5e6) req.destroy(); // 5 МБ — с запасом под восстановление из выгрузки
     });
     req.on('end', () => {
       try {

@@ -748,6 +748,27 @@ document.addEventListener('click', async (e) => {
   }
 });
 
+// Восстановление из файла «Скачать все данные»: заменяет всё на сервере содержимым файла
+$('#import-file').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  let data;
+  try {
+    data = JSON.parse(await file.text());
+  } catch {
+    return toast('Это не JSON-файл');
+  }
+  const days = Object.keys(data.checks || {}).length;
+  if (!confirm(`Заменить все данные на сайте данными из файла «${file.name}»? (${days} отметок)`)) return;
+  try {
+    await write('/api/import', data);
+    render();
+    toast('Данные восстановлены');
+  } catch (err) {
+    toast('Не получилось: ' + err.message);
+  }
+});
 $('#task-form').addEventListener('submit', saveTask);
 $('#food-form').addEventListener('submit', async (e) => {
   e.preventDefault();
