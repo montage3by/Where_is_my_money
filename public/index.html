@@ -21,7 +21,7 @@
     <button role="tab" data-tab="todo" aria-selected="true">Дела</button>
     <button role="tab" data-tab="game">Игра</button>
     <button role="tab" data-tab="gym">Тренировки</button>
-    <button role="tab" data-tab="meals">Рацион</button>
+    <button role="tab" data-tab="meals">PSMF</button>
   </nav>
 
   <main>
@@ -41,8 +41,13 @@
     </section>
 
     <section id="tab-meals" class="panel" hidden>
+      <div class="card psmf-hero" id="psmf-hero"></div>
+      <h3 class="cat"><span>Рацион и график дня</span></h3>
       <div class="days" id="days"></div>
       <div class="card" id="day-card"></div>
+      <h3 class="cat"><span>Закупка на неделю</span><span id="shop-count"></span></h3>
+      <div class="card shop" id="shopping"></div>
+      <button class="link-btn" data-reset="shopping">Сбросить список покупок</button>
       <h3 class="cat"><span>Съедено на самом деле</span><span id="food-total"></span></h3>
       <div class="food-macros kcal" id="food-macros"></div>
       <div class="card food" id="food-list"></div>
@@ -51,7 +56,7 @@
           <label><input type="radio" name="meal" value="Завтрак" checked><span>Завтрак</span></label>
           <label><input type="radio" name="meal" value="Обед"><span>Обед</span></label>
           <label><input type="radio" name="meal" value="Ужин"><span>Ужин</span></label>
-          <label><input type="radio" name="meal" value="Перекус"><span>Перекус</span></label>
+          <label><input type="radio" name="meal" value="Вечер"><span>Вечер</span></label>
         </div>
         <input name="text" placeholder="Что съел: хачапури по-аджарски и кофе с молоком" maxlength="300" autocomplete="off">
         <div class="food-row">
@@ -59,7 +64,7 @@
           <button type="submit">Записать</button>
         </div>
       </form>
-      <h3 class="cat">Правила питания</h3>
+      <h3 class="cat">Правила PSMF</h3>
       <ul class="card rules" id="rules"></ul>
       <button class="link-btn" data-reset="meals">Сбросить отметки рациона за неделю</button>
     </section>

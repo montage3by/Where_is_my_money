@@ -32,7 +32,7 @@ const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(ne
 const weekday = (date) => new Date(`${date}T12:00:00Z`).getUTCDay();
 const dailyRoutine = (date) => state.routine.filter((t) => !t.once && (!t.date || t.date === date)
   && !(t.skip && t.skip.includes(date))
-  && (!t.from || t.from <= date) && (!t.days || t.days.includes(weekday(date))));
+  && (!t.from || t.from <= date) && (!t.until || date <= t.until) && (!t.days || t.days.includes(weekday(date))));
 
 function snapshotDay(date) {
   // Сегодня и будущее — всегда по актуальному плану; прошлое не трогаем, если уже сохранено
@@ -73,6 +73,7 @@ function cleanTask(input, existing) {
   if (existing && existing.meal !== undefined) t.meal = existing.meal;
   // skip — даты, в которые ежедневное дело заменено отдельным (например, другое время подъёма)
   if (existing && existing.skip) t.skip = existing.skip;
+  if (existing && existing.until) t.until = existing.until;
   for (const k of ['start', 'end']) {
     const v = str(input[k], 5);
     if (!v) continue;
@@ -201,6 +202,16 @@ const MIGRATIONS = [
       t.skip = t.skip.filter((d) => d !== '2026-11-10');
       if (!t.skip.length) delete t.skip;
     }
+  }],
+  // PSMF 16 ноября – 6 декабря: дело «добавки и вода», тренировки только Пн/Ср/Пт
+  ['2026-11-16-psmf', (st) => {
+    if (!st.routine.some((t) => t.id === 'psmf')) {
+      st.routine.push({ id: 'psmf', title: 'PSMF: добавки и вода', from: '2026-11-16', until: '2026-12-06',
+        details: 'Омега-3 — 2 г EPA+DHA в день (половина с завтраком, половина с обедом). Электролиты не пропускать: при мигрени особенно.',
+        subtasks: ['Омега-3', 'Мультивитамин', 'Соль с калием в еде', 'Магний вечером', 'Вода ~3 л'] });
+    }
+    const t = st.routine.find((x) => x.id === 'workout');
+    if (t) t.skip = [...new Set([...(t.skip || []), '2026-11-17', '2026-11-19', '2026-11-21', '2026-11-24', '2026-11-26', '2026-11-28', '2026-12-01', '2026-12-03', '2026-12-05'])];
   }],
   ['2026-11-01-docs', (st) => {
     if (!st.routine.some((t) => t.id === 'docs-1101')) st.routine.push({ id: 'docs-1101', title: 'Проверить билеты и документы', date: '2026-11-01' });
@@ -343,6 +354,8 @@ async function handleApi(req, res, route) {
       settings: { city: DEFAULT_CITY, ...(ok(body.settings, false) ? body.settings : {}) },
       food: ok(body.food, false) ? body.food : {},
       workouts: ok(body.workouts, false) ? body.workouts : {},
+      // Правки из кода, уже применённые в выгрузке, не применяются повторно
+      migrations: [...new Set([...(Array.isArray(body.migrations) ? body.migrations : []), ...state.migrations])],
     };
   } else if (route === '/api/settings/city') {
     const lat = Number(body.lat);

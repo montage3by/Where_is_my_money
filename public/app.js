@@ -126,6 +126,7 @@ const visibleTasks = (date) => tasksFor(date).filter((t) => {
   if (t.date) return t.date === date;
   if (t.skip && t.skip.includes(date)) return false;
   if (t.from && date < t.from) return false;
+  if (t.until && date > t.until) return false;
   if (t.days && !t.days.includes(new Date(date + 'T00:00').getDay())) return false;
   if (!t.once) return true;
   const d = doneOn(date, t);
@@ -456,7 +457,37 @@ function renderFood() {
     : '<p class="empty">Сегодня пока ничего не записано</p>';
 }
 
+// ——— PSMF: срок и нормы, рацион с графиком дня, закупка ———
+const fmtShort = (d) => new Date(d + 'T00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '');
+function renderPsmfHero() {
+  const P = plan.psmf;
+  if (!P) return;
+  const today = ymd(new Date());
+  const dayN = (d) => Math.round((new Date(d + 'T00:00') - new Date(P.start + 'T00:00')) / 86400000) + 1;
+  const total = dayN(P.end);
+  let status;
+  if (today < P.start) status = `Старт ${fmtShort(P.start)} — через ${1 - dayN(today)} дн. Самое время закупиться`;
+  else if (today <= P.end) status = `День ${dayN(today)} из ${total}`;
+  else if (today <= P.exit) status = `Неделя выхода: добавляем углеводы, до ${fmtShort(P.exit)}`;
+  else status = 'PSMF завершён';
+  const pct = Math.max(0, Math.min(100, ((dayN(today) - 1) / total) * 100));
+  const { macros } = plan.summary;
+  const c = P.calc;
+  $('#psmf-hero').innerHTML = `
+    <div class="ph-top"><b>PSMF</b><span class="kcal">${fmtShort(P.start)} – ${fmtShort(P.end)}</span></div>
+    <div class="ph-status">${status}</div>
+    <div class="bar"><span style="width:${pct}%"></span></div>
+    <div class="ph-grid">
+      <div><b>~${plan.summary.kcal}</b><span class="kcal">ккал</span></div>
+      <div><b>${macros.protein}</b><span class="kcal">белок, г</span></div>
+      <div><b>≤${macros.fat}</b><span class="kcal">жиры, г</span></div>
+      <div><b>≤${macros.carbs}</b><span class="kcal">углев., г</span></div>
+    </div>
+    <p class="kcal ph-calc">${c.weight} кг · ~${c.fat}% жира → сухая масса ~${c.lbm} кг · белок ${String(c.proteinPerLbm).replace('.', ',')} г на кг сухой массы</p>`;
+}
+
 function renderMeals() {
+  renderPsmfHero();
   $('#days').innerHTML = plan.days.map((d, i) => `
     <button class="day${i === todayIdx ? ' today' : ''}" data-day="${i}" aria-pressed="${i === selectedDay}">
       ${d.short}
@@ -465,19 +496,30 @@ function renderMeals() {
 
   const day = plan.days[selectedDay];
   const total = day.meals.reduce((s, m) => s + m.kcal, 0);
+  const protein = day.meals.reduce((s, m) => s + (m.p || 0), 0);
   const eaten = day.meals.filter((m) => isDone(m.id)).reduce((s, m) => s + m.kcal, 0);
+  const eatenP = day.meals.filter((m) => isDone(m.id)).reduce((s, m) => s + (m.p || 0), 0);
+  // График: приёмы пищи (с галочками) и добавки/вода по времени
+  const rows = [
+    ...day.meals.map((m) => ({ time: m.time, html: taskHtml({ id: m.id, title: m.dish, meta: `<b>${m.time}</b><span>${esc(m.type)}</span>`, right: `~${m.kcal}${m.p ? `<small>Б ${m.p}</small>` : ''}` }) })),
+    ...(plan.schedule || []).map((x) => ({ time: x.time, html: `<div class="sched"><b>${x.time}</b><span>${esc(x.text)}</span></div>` })),
+  ].sort((a, b) => a.time.localeCompare(b.time));
   $('#day-card').innerHTML = `
     <div class="day-head">
       <h2>${day.name}${selectedDay === todayIdx ? ' · сегодня' : ''}</h2>
-      <span class="kcal">${eaten} / ~${total} ккал</span>
+      <span class="kcal">${eaten} / ~${total} ккал · Б ${eatenP} / ${protein}</span>
     </div>
     <div class="bar"><span style="width:${(eaten / total) * 100}%"></span></div>
-    ${day.meals.map((m) => taskHtml({
-      id: m.id,
-      title: m.dish,
-      meta: `<b>${m.time}</b><span>${esc(m.type)}</span>`,
-      right: `~${m.kcal}`,
-    })).join('')}`;
+    ${rows.map((r) => r.html).join('')}`;
+  renderShopping();
+}
+
+function renderShopping() {
+  const all = plan.shopping.flatMap((c) => c.items);
+  $('#shop-count').textContent = `${all.filter((i) => isDone(i.id)).length} / ${all.length}`;
+  $('#shopping').innerHTML = plan.shopping.map((c) => `
+    <div class="shop-cat kcal">${esc(c.category)}</div>
+    ${c.items.map((i) => taskHtml({ id: i.id, title: i.name, right: esc(i.qty) })).join('')}`).join('');
 }
 
 function renderWeights() {
@@ -842,7 +884,7 @@ async function refresh() {
     return;
   }
   const { summary, rules } = plan;
-  $('#summary').textContent = `Окно ${summary.window} · ~${summary.kcal} ккал · Б ${summary.macros.protein} / Ж ${summary.macros.fat} / У ${summary.macros.carbs}`;
+  $('#summary').textContent = `${summary.window} · ~${summary.kcal} ккал · Б ${summary.macros.protein} / Ж ≤${summary.macros.fat} / У ≤${summary.macros.carbs}`;
   $('#rules').innerHTML = rules.map((r) => `<li>${esc(r)}</li>`).join('');
   openDate(defaultDate());
   selectedDay = (todoDay().getDay() + 6) % 7; // рацион — на тот же день недели

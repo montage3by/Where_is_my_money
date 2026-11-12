@@ -501,3 +501,19 @@ h1 { letter-spacing: 0.04em; }
 .img-dialog img { display: block; width: 100%; height: auto; border-radius: 12px; }
 .gx-img { display: block; width: 100%; height: auto; border-radius: 8px; margin: 0 0 8px; cursor: zoom-in; background: #111; }
 .gp-day li .gx-img { margin: 6px 0 4px; }
+
+/* PSMF: срок и нормы, график дня, закупка */
+.psmf-hero { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.ph-top { display: flex; justify-content: space-between; align-items: baseline; }
+.ph-top b { font-size: 20px; letter-spacing: .04em; color: var(--accent); }
+.ph-status { font-size: 17px; font-weight: 600; }
+.ph-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; }
+.ph-grid div { background: var(--bg); border-radius: 10px; padding: 8px 4px; display: flex; flex-direction: column; gap: 2px; }
+.ph-grid b { font-size: 18px; }
+.ph-calc { margin: 0; }
+.task .right small { display: block; font-size: 11px; color: var(--muted); }
+.sched { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 8px 4px 8px 38px; color: var(--muted); font-size: 14px; border-top: 1px dashed var(--line); }
+.sched b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.shop { padding: 4px 16px; }
+.shop .task .right { max-width: 45%; text-align: right; }
+.shop-cat { padding: 12px 0 2px; text-transform: uppercase; letter-spacing: .04em; font-size: 11px; }
