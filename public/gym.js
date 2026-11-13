@@ -14,6 +14,8 @@ const workouts = () => state.workouts || {};
 const wDays = () => plan.workout.days;
 const wDay = (id) => wDays().find((d) => d.id === id);
 const exName = (e) => e.name || plan.exercises[e.id];
+// Упражнение на время (планки): в подходе секунды вместо веса
+const isSecId = (id) => wDays().some((d) => d.ex.some((e) => e.id === id && isSec(e)));
 const exMuscles = (e) => (plan.muscles && plan.muscles[e.id]) || '';
 const isSec = (e) => e.unit === 'sec';
 const shortDate = (date) => new Date(date + 'T00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '');
@@ -173,7 +175,7 @@ function exHtml(e, i, day) {
 // ——— Прогресс ———
 function progressSeries(id) {
   if (id === 'body') return (state.weights || []).map((w) => ({ date: w.date, v: w.kg, text: `${fmtNum(w.kg)} кг` }));
-  const sec = id === 'plank';
+  const sec = isSecId(id);
   return Object.keys(workouts()).sort().map((d) => {
     const b = bestSet(setsOf(d, id), sec);
     return b && (sec ? b[1] : b[0] || b[1]) ? { date: d, v: sec || !b[0] ? b[1] : b[0], text: setText(b, sec) } : null;
@@ -212,11 +214,11 @@ function renderGymProgress() {
   }
   const lastP = pts[pts.length - 1];
   const diff = Math.round((lastP.v - pts[0].v) * 10) / 10;
-  const unit = gymProgress === 'plank' ? 'сек' : 'кг';
+  const unit = isSecId(gymProgress) ? 'сек' : 'кг';
   $('#gym-progress').innerHTML = `
     <span class="kcal gp-label">${esc(isBody ? 'ВЕС ТЕЛА' : plan.exercises[gymProgress].toUpperCase())}</span>
     <div class="gp-big"><b>${fmtNum(lastP.v)}</b><span>${unit}</span></div>
-    <div class="kcal">${isBody ? 'Последнее взвешивание' : gymProgress === 'plank' ? 'Лучший подход' : 'Рабочий вес'} · ${shortDate(lastP.date)} · ${lastP.text}
+    <div class="kcal">${isBody ? 'Последнее взвешивание' : isSecId(gymProgress) ? 'Лучший подход' : 'Рабочий вес'} · ${shortDate(lastP.date)} · ${lastP.text}
       ${pts.length > 1 && diff ? ` · <b class="${diff > 0 === !isBody ? 'gp-up' : 'gp-down'}">${diff > 0 ? '+' : ''}${fmtNum(diff)} ${unit}</b> с ${shortDate(pts[0].date)}` : ''}</div>
     ${lineChart(pts)}`;
 }

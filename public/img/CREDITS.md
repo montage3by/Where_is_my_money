@@ -42,3 +42,7 @@
 | home-goblet | Goblet_Squat |
 | home-lunge | Dumbbell_Rear_Lunge |
 | home-glute-bridge | Butt_Lift_Bridge |
+| home-hip-thrust | Barbell_Hip_Thrust (на фото — штанга; дома — гантель и диван) |
+| home-reverse-crunch | Reverse_Crunch |
+| home-weighted-crunch | Weighted_Crunches |
+| home-side-plank | Side_Bridge |
