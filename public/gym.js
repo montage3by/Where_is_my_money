@@ -127,6 +127,7 @@ function renderGymToday() {
     <div class="gt-head"><span class="kcal">ЗАЛ · ${when.toUpperCase()}</span><span class="kcal">${doneN} / ${day.ex.length}</span></div>
     <h2 class="gt-title">${gymDate === today ? 'Сегодня — ' : ''}${esc(day.title)}</h2>
     <div class="kcal">${day.ex.length} упражнений · 45–60 мин${w && w.done ? ' · <b class="gt-ok">завершена ✓</b>' : ''}</div>
+    ${(() => { const x = typeof workoutXp === 'function' && workoutXp(gymDate); return `<div class="kcal gt-xp">⚡ ${x && x.xp ? `+${x.xp} XP · ${esc(x.note)}` : 'Подход +3 XP · упражнение по плану +10 · завершить +20 · рекорд +15'}</div>`; })()}
     ${picker}
     <div class="gx-list">${day.ex.map((e, i) => exHtml(e, i, day)).join('')}</div>
     <div class="gt-actions">

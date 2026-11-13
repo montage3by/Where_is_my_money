@@ -14,7 +14,6 @@ const PASSWORD = process.env.APP_PASSWORD || '';
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 const validIds = new Set([
-  ...plan.days.flatMap((d) => d.meals.map((m) => m.id)),
   ...plan.shopping.flatMap((c) => c.items.map((i) => i.id)),
 ]);
 // Дела дня: todo:<YYYY-MM-DD>:<taskId>[:<subtask>], разовые — todo:once:<taskId>[:<subtask>]
@@ -41,6 +40,9 @@ function snapshotDay(date) {
 
 function isValidId(id) {
   if (validIds.has(id)) return true;
+  // Приём пищи по рациону на дату: meal:<YYYY-MM-DD>:<номер>
+  const meal = /^meal:(\d{4}-\d{2}-\d{2}):(\d)$/.exec(String(id));
+  if (meal) return Number(meal[2]) < plan.days[(weekday(meal[1]) + 6) % 7].meals.length;
   const m = /^todo:(\d{4}-\d{2}-\d{2}|once):(.+)$/.exec(String(id));
   if (!m) return false;
   if (m[1] === 'once') return checkableIds(state.routine.filter((t) => t.once)).has(m[2]);

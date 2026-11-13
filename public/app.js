@@ -59,6 +59,14 @@ function toast(msg) {
 }
 
 const isDone = (id) => Boolean(state.checks[id]);
+// Отметки приёмов пищи — по датам: meal:<YYYY-MM-DD>:<номер приёма>
+const mealKey = (date, i) => `meal:${date}:${i}`;
+// Дата выбранного дня рациона на текущей неделе (Пн = 0)
+function mealDate(idx) {
+  const d = new Date();
+  d.setDate(d.getDate() - todayIdx + idx);
+  return ymd(d);
+}
 
 // Запись на сервер. Ответы могут прийти не по порядку: применяем только ответ на последнюю
 // запись — в нём уже есть все предыдущие. Иначе быстрые отметки подряд «слетали».
@@ -491,17 +499,20 @@ function renderMeals() {
   $('#days').innerHTML = plan.days.map((d, i) => `
     <button class="day${i === todayIdx ? ' today' : ''}" data-day="${i}" aria-pressed="${i === selectedDay}">
       ${d.short}
-      <span class="dots">${d.meals.map((m) => `<i class="${isDone(m.id) ? 'on' : ''}"></i>`).join('')}</span>
+      <span class="dots">${d.meals.map((m, j) => `<i class="${isDone(mealKey(mealDate(i), j)) ? 'on' : ''}"></i>`).join('')}</span>
     </button>`).join('');
 
   const day = plan.days[selectedDay];
-  const total = day.meals.reduce((s, m) => s + m.kcal, 0);
-  const protein = day.meals.reduce((s, m) => s + (m.p || 0), 0);
-  const eaten = day.meals.filter((m) => isDone(m.id)).reduce((s, m) => s + m.kcal, 0);
-  const eatenP = day.meals.filter((m) => isDone(m.id)).reduce((s, m) => s + (m.p || 0), 0);
+  const date = mealDate(selectedDay);
+  const meals = day.meals.map((m, i) => ({ ...m, id: mealKey(date, i) }));
+  const total = meals.reduce((s, m) => s + m.kcal, 0);
+  const protein = meals.reduce((s, m) => s + (m.p || 0), 0);
+  const eaten = meals.filter((m) => isDone(m.id)).reduce((s, m) => s + m.kcal, 0);
+  const eatenP = meals.filter((m) => isDone(m.id)).reduce((s, m) => s + (m.p || 0), 0);
+  const dxp = typeof dietXp === 'function' ? dietXp(date) : null;
   // График: приёмы пищи (с галочками) и добавки/вода по времени
   const rows = [
-    ...day.meals.map((m) => ({ time: m.time, html: taskHtml({ id: m.id, title: m.dish, meta: `<b>${m.time}</b><span>${esc(m.type)}</span>`, right: `~${m.kcal}${m.p ? `<small>Б ${m.p}</small>` : ''}` }) })),
+    ...meals.map((m) => ({ time: m.time, html: taskHtml({ id: m.id, title: m.dish, meta: `<b>${m.time}</b><span>${esc(m.type)}</span>`, right: `~${m.kcal}${m.p ? `<small>Б ${m.p}</small>` : ''}` }) })),
     ...(plan.schedule || []).map((x) => ({ time: x.time, html: `<div class="sched"><b>${x.time}</b><span>${esc(x.text)}</span></div>` })),
   ].sort((a, b) => a.time.localeCompare(b.time));
   $('#day-card').innerHTML = `
@@ -509,6 +520,7 @@ function renderMeals() {
       <h2>${day.name}${selectedDay === todayIdx ? ' · сегодня' : ''}</h2>
       <span class="kcal">${eaten} / ~${total} ккал · Б ${eatenP} / ${protein}</span>
     </div>
+    <div class="kcal diet-xp">⚡ ${dxp ? `+${dxp.xp} XP за рацион · ${dxp.note}` : `+${5} XP за каждый приём по плану, +20 за весь день`}</div>
     <div class="bar"><span style="width:${(eaten / total) * 100}%"></span></div>
     ${rows.map((r) => r.html).join('')}`;
   renderShopping();

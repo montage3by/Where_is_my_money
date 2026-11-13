@@ -75,9 +75,74 @@ function dayCalc(date) {
     res.max += max;
     res.items.push({ t, gain, loss, max, full: fs.every((f) => f >= 1) });
   }
-  res.net = res.gain - res.loss;
+  // Бонусы сверх дел: тренировка и рацион — без штрафов, в Силу
+  res.bonus = 0;
+  res.bonusItems = [];
+  for (const b of [workoutXp(date), dietXp(date)]) {
+    if (!b || !b.xp) continue;
+    res.bonus += b.xp;
+    res.bonusItems.push(b);
+    res.byStat.str = (res.byStat.str || 0) + b.xp;
+  }
+  res.net = res.gain - res.loss + res.bonus;
   res.ratio = res.max ? res.gain / res.max : 0;
   return res;
+}
+
+// ——— Опыт за тренировку ———
+// Подход (с повторами) +3 (не больше плана +2 на упражнение), упражнение по плану +10,
+// тренировка завершена +20, личный рекорд в упражнении (лучше всех прошлых раз) +15
+const WXP = { set: 3, ex: 10, done: 20, pr: 15 };
+const wSetOk = (x) => Array.isArray(x) && x[1] != null && x[1] > 0;
+function wBest(sets, sec) {
+  let best = null;
+  for (const [kg, reps] of sets || []) {
+    if (!(reps > 0)) continue;
+    const k = sec ? 0 : kg || 0;
+    if (!best || k > best[0] || (k === best[0] && reps > best[1])) best = [k, reps];
+  }
+  return best;
+}
+const wBetter = (a, b) => !b || a[0] > b[0] || (a[0] === b[0] && a[1] > b[1]);
+function workoutXp(date) {
+  const ws = state.workouts || {};
+  const w = ws[date];
+  const day = w && plan.workout && plan.workout.days.find((d) => d.id === w.day);
+  if (!day) return null;
+  let xp = 0, sets = 0, exDone = 0, prs = 0;
+  for (const e of day.ex) {
+    const list = (w.ex && w.ex[e.id]) || [];
+    const ok = list.filter(wSetOk).length;
+    sets += Math.min(ok, e.sets + 2);
+    if (list.length >= e.sets && list.slice(0, e.sets).every(wSetOk)) exDone++;
+    const sec = e.unit === 'sec';
+    const best = wBest(list, sec);
+    if (best) {
+      let prev = null;
+      for (const d of Object.keys(ws)) if (d < date) {
+        const b = wBest(ws[d].ex && ws[d].ex[e.id], sec);
+        if (b && wBetter(b, prev)) prev = b;
+      }
+      if (prev && wBetter(best, prev)) prs++;
+    }
+  }
+  xp = sets * WXP.set + exDone * WXP.ex + (w.done ? WXP.done : 0) + prs * WXP.pr;
+  const parts = [`${sets} подх.`, `${exDone}/${day.ex.length} упр.`];
+  if (w.done) parts.push('завершена');
+  if (prs) parts.push(`рекордов: ${prs}`);
+  return { title: `Тренировка ${day.short}`, label: 'тренировку', xp, note: parts.join(' · ') };
+}
+
+// ——— Опыт за рацион ———
+// Каждый отмеченный приём пищи по плану +5, весь план дня +20
+const DXP = { meal: 5, all: 20 };
+function dietXp(date) {
+  if (!plan.days) return null;
+  const day = plan.days[(new Date(date + 'T00:00').getDay() + 6) % 7];
+  const done = day.meals.filter((m, i) => state.checks[mealKey(date, i)]).length;
+  if (!done) return null;
+  const all = done === day.meals.length;
+  return { title: 'Рацион', label: 'рацион', xp: done * DXP.meal + (all ? DXP.all : 0), note: `${done}/${day.meals.length} приёмов${all ? ' · план выполнен' : ''}` };
 }
 
 // Уровень: чтобы дойти до уровня L, нужно 20·L·(L−1) XP
@@ -227,7 +292,7 @@ function renderGameBar() {
       ? `<div class="checkup warn"><b>Чекап дня</b><span>Не отмечено: ${left.length}. В 00:00 спишется <b>−${minus} XP</b>. Отметь, что уже сделал.</span></div>`
       : '<div class="checkup ok"><b>Чекап дня</b><span>Всё отмечено — день закрыт без потерь 💪</span></div>';
   } else if (date === G.today && hour < 12 && yesterday) {
-    checkup = `<div class="checkup"><b>Итог вчера</b><span>+${yesterday.gain} XP · −${yesterday.loss} XP · итого <b>${yesterday.net >= 0 ? '+' : ''}${yesterday.net}</b></span></div>`;
+    checkup = `<div class="checkup"><b>Итог вчера</b><span>+${yesterday.gain + yesterday.bonus} XP · −${yesterday.loss} XP · итого <b>${yesterday.net >= 0 ? '+' : ''}${yesterday.net}</b></span></div>`;
   }
 
   $('#game-bar').innerHTML = `
@@ -241,7 +306,7 @@ function renderGameBar() {
     ${inGame ? `<div class="gb-day"><span class="gb-n">ДЕНЬ ${n}</span><span class="gb-of">/ ${gameLength()}</span></div>` : ''}
     <div class="lvl-bar" title="${G.total} XP"><span style="width:${Math.max(0, Math.min(100, pct))}%"></span></div>
     <div class="gb-sub"><span>⬆ <b>${L.to - Math.max(0, G.total)} XP</b> до ур. ${L.level + 1}</span>${R.next ? `<span>${rankFrame(R.next, 'xs')} <b>${R.toNext} XP</b> до ${R.next}-ранга</span>` : '<span>S-ранг — вершина 👑</span>'}</div>
-    <div class="kcal gb-sub">Сегодня +${today.gain} из ${today.max} XP</div>
+    <div class="kcal gb-sub">Сегодня +${today.gain} из ${today.max} XP за дела${today.bonus ? ` · <b>+${today.bonus}</b> за ${today.bonusItems.map((b) => b.label).join(' и ')}` : ''}</div>
     ${checkup}`;
 }
 
