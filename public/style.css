@@ -518,3 +518,5 @@ h1 { letter-spacing: 0.04em; }
 .shop .task .right { max-width: 45%; text-align: right; }
 .shop-cat { padding: 12px 0 2px; text-transform: uppercase; letter-spacing: .04em; font-size: 11px; }
 .import-btn { text-align: center; margin-top: 0; }
+.gx-muscles { margin: 8px 0 0; font-size: 14px; font-weight: 600; }
+.gp-muscles { display: block; font-size: 13px; }

@@ -14,6 +14,7 @@ const workouts = () => state.workouts || {};
 const wDays = () => plan.workout.days;
 const wDay = (id) => wDays().find((d) => d.id === id);
 const exName = (e) => e.name || plan.exercises[e.id];
+const exMuscles = (e) => (plan.muscles && plan.muscles[e.id]) || '';
 const isSec = (e) => e.unit === 'sec';
 const shortDate = (date) => new Date(date + 'T00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '');
 
@@ -153,6 +154,7 @@ function exHtml(e, i, day) {
     </button>
     ${open ? `<div class="gx-body">
       ${exImg(day, e, i) ? `<img class="gx-img" src="${exImg(day, e, i)}" data-gym-img-src="${exImg(day, e, i)}" alt="Техника: ${esc(exName(e))}" loading="lazy">` : ''}
+      ${exMuscles(e) ? `<p class="gx-muscles">💪 ${esc(exMuscles(e))}</p>` : ''}
       <p class="gx-tip">🎯 ${esc(e.tip)}</p>
       ${[...Array(rows)].map((_, k) => {
         const [kg, reps] = sets[k] || [];
@@ -224,7 +226,7 @@ function renderGymProgram() {
   $('#gym-program').innerHTML = shown.map((d) => `
     <details class="card gp-day" style="--wc:${d.color}">
       <summary><span class="gp-dot"></span><b>${d.date ? shortDate(d.date) : d.dow != null ? WD[d.dow] : 'с ' + shortDate(d.from)} · ${esc(d.title)}</b><span class="kcal">${d.ex.length} упр.</span></summary>
-      <ol>${d.ex.map((e, i) => `<li><span>${esc(exName(e))}</span><b>${e.sets}×${esc(e.reps)}</b><small class="kcal">${esc(e.tip)}</small>
+      <ol>${d.ex.map((e, i) => `<li><span>${esc(exName(e))}</span><b>${e.sets}×${esc(e.reps)}</b>${exMuscles(e) ? `<small class="gp-muscles">💪 ${esc(exMuscles(e))}</small>` : ''}<small class="kcal">${esc(e.tip)}</small>
         ${exImg(d, e, i) ? `<img class="gx-img" src="${exImg(d, e, i)}" data-gym-img-src="${exImg(d, e, i)}" alt="" loading="lazy">` : ''}</li>`).join('')}</ol>
       ${d.noCard ? '' : `<button class="link-btn" data-gym-img="${d.id}">Техника — картинка</button>`}
     </details>`).join('') + `<ul class="card rules">${plan.workout.notes.map((n) => `<li>${esc(n)}</li>`).join('')}</ul>`;
