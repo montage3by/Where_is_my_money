@@ -196,6 +196,11 @@ const MIGRATIONS = [
   }],
   // 10 ноября: отдых отменили — тренировка в этот день всё-таки есть
   ['2026-11-10-rest', () => {}],
+  // С 14 ноября два дня восстановления: тренировки пн–пт, сб и вс — отдых
+  ['2026-11-14-weekends', (st) => {
+    const t = st.routine.find((x) => x.id === 'workout');
+    if (t) t.days = [1, 2, 3, 4, 5];
+  }],
   ['2026-11-10-unrest', (st) => {
     const t = st.routine.find((x) => x.id === 'workout');
     if (t && t.skip) {

@@ -117,7 +117,7 @@ function renderGymToday() {
   if (!day) {
     $('#gym-today').innerHTML = `<div class="gt-head"><span class="kcal">ЗАЛ · ${when.toUpperCase()}</span></div>
       <h2 class="gt-title">${esc((plan.workout.off && plan.workout.off[gymDate]) || 'Отдых 😴')}</h2>
-      <p class="kcal">${plan.workout.off && plan.workout.off[gymDate] ? 'В этот день зала нет.' : 'По плану тренировки пн–сб.'} Если хочешь потренироваться — выбери тренировку:</p>${picker}`;
+      <p class="kcal">${plan.workout.off && plan.workout.off[gymDate] ? 'В этот день зала нет.' : 'По плану тренировки пн–пт, сб и вс — восстановление.'} Если хочешь потренироваться — выбери тренировку:</p>${picker}`;
     return;
   }
   const doneN = day.ex.filter((e) => exDone(e, setsOf(gymDate, e.id))).length;
