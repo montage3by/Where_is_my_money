@@ -32,10 +32,12 @@ function dayFor(date) {
   // Сплит по кругу: номер буднего дня с начала ротации → тренировка
   const rot = plan.workout.rotation;
   if (rot && date >= rot.from) {
-    if (!rot.dows.includes(dow)) return null;
+    // extra — тренировка по кругу в день, который обычно выходной (перенос)
+    const extra = plan.workout.extra || {};
+    if (!rot.dows.includes(dow) && !extra[date]) return null;
     let n = 0;
     for (let d = rot.from; d < date; d = addDays(d, 1)) {
-      if (rot.dows.includes(new Date(d + 'T00:00').getDay()) && !(plan.workout.off && plan.workout.off[d])) n++;
+      if ((rot.dows.includes(new Date(d + 'T00:00').getDay()) || extra[d]) && !(plan.workout.off && plan.workout.off[d])) n++;
     }
     return wDay(rot.order[n % rot.order.length]) || null;
   }

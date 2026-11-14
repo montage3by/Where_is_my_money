@@ -203,6 +203,17 @@ const MIGRATIONS = [
     const t = st.routine.find((x) => x.id === 'workout');
     if (t) t.days = [1, 2, 3, 4, 5];
   }],
+  // Пятница 13-е — отдых, тренировка перенесена на субботу 14-е
+  ['2026-11-14-swap', (st) => {
+    const t = st.routine.find((x) => x.id === 'workout');
+    if (t) t.skip = [...new Set([...(t.skip || []), '2026-11-13'])];
+    // Прошедший день хранит свой список дел — убрать оттуда тренировку, чтобы не было штрафа
+    if (st.snapshots['2026-11-13']) st.snapshots['2026-11-13'] = st.snapshots['2026-11-13'].filter((x) => x.id !== 'workout');
+    if (!st.routine.some((x) => x.id === 'workout-1114')) {
+      st.routine.push({ id: 'workout-1114', start: '19:30', title: 'Тренировка', date: '2026-11-14',
+        details: 'Pull — перенос с пятницы. «Завершить тренировку» отметит это дело.' });
+    }
+  }],
   ['2026-11-10-unrest', (st) => {
     const t = st.routine.find((x) => x.id === 'workout');
     if (t && t.skip) {
