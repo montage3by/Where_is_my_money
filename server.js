@@ -237,6 +237,28 @@ const MIGRATIONS = [
     st.routine.push({ id: 'mind', start: '20:00', end: '22:00', title: 'Осознанность: запись дня', from: '2026-11-14',
       details: 'Надиктуй во вкладке «Осознанность», как прошёл день и какое настроение. Отметится само после записи.' });
   }],
+  // Режим «отбой 23:00 — подъём 6:00» и напоминания про питание (с 16 ноября)
+  ['2026-11-15-habits', (st) => {
+    const find = (id) => st.routine.find((t) => t.id === id);
+    const m = find('morning');
+    if (m) {
+      m.start = '06:00';
+      if (m.subtasks) m.subtasks = m.subtasks.map((x) => x.replace(/^Подъём.*/i, 'Подъём в 6:00'));
+    }
+    const l = find('lunch');
+    if (l) Object.assign(l, { start: '14:00', end: '14:30', details: 'Меню дня — во вкладке PSMF. С обедом — вторая половина омега-3.' });
+    const d = find('dinner');
+    if (d) d.details = 'Меню дня — во вкладке PSMF. В 20:30 — творог и креатин.';
+    if (!find('evening')) {
+      st.routine.push({ id: 'evening', start: '20:30', title: 'Творог + креатин', from: '2026-11-16',
+        details: 'Будни после тренировки: 250 г творога 0% + банан. Выходные: 200 г творога. Креатин 5 г — каждый день.',
+        subtasks: ['Творог', 'Креатин 5 г'] });
+    }
+    if (!find('sleep')) {
+      st.routine.push({ id: 'sleep', start: '22:45', end: '23:00', title: 'Отбой до 23:00', from: '2026-11-15',
+        details: 'Телефон в сторону в 22:45. Подъём в 6:00 — 7 часов сна.' });
+    }
+  }],
   ['2026-11-10-unrest', (st) => {
     const t = st.routine.find((x) => x.id === 'workout');
     if (t && t.skip) {
