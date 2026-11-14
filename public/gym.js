@@ -30,6 +30,8 @@ function dayFor(date) {
   if (dated) return dated;
   const dow = new Date(date + 'T00:00').getDay();
   // Сплит по кругу: номер буднего дня с начала ротации → тренировка
+  const wk = plan.workout.weekly;
+  if (wk && date >= wk.from) return wDay(wk.days[dow]) || null;
   const rot = plan.workout.rotation;
   if (rot && date >= rot.from) {
     // extra — тренировка по кругу в день, который обычно выходной (перенос)

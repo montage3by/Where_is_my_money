@@ -214,6 +214,15 @@ const MIGRATIONS = [
         details: 'Pull — перенос с пятницы. «Завершить тренировку» отметит это дело.' });
     }
   }],
+  // С 16 ноября тренировки Пн–Пт по дням недели и на PSMF тоже — вернуть дело «Тренировка» во Вт/Чт
+  ['2026-11-16-weekly', (st) => {
+    const psmfOff = ['2026-11-17', '2026-11-19', '2026-11-21', '2026-11-24', '2026-11-26', '2026-11-28', '2026-12-01', '2026-12-03', '2026-12-05'];
+    const t = st.routine.find((x) => x.id === 'workout');
+    if (t && t.skip) {
+      t.skip = t.skip.filter((d) => !psmfOff.includes(d));
+      if (!t.skip.length) delete t.skip;
+    }
+  }],
   ['2026-11-10-unrest', (st) => {
     const t = st.routine.find((x) => x.id === 'workout');
     if (t && t.skip) {
@@ -221,7 +230,7 @@ const MIGRATIONS = [
       if (!t.skip.length) delete t.skip;
     }
   }],
-  // PSMF 16 ноября – 6 декабря: дело «добавки и вода», тренировки только Пн/Ср/Пт
+  // PSMF 16 ноября – 6 декабря: дело «добавки и вода» (отдых Вт/Чт отменён миграцией 2026-11-16-weekly)
   ['2026-11-16-psmf', (st) => {
     if (!st.routine.some((t) => t.id === 'psmf')) {
       st.routine.push({ id: 'psmf', title: 'PSMF: добавки и вода', from: '2026-11-16', until: '2026-12-06',
