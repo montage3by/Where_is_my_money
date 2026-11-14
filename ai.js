@@ -62,6 +62,61 @@ async function estimateFood(text) {
   return { items, kcal: Math.round(sum('kcal')), p: sum('p'), f: sum('f'), c: sum('c') };
 }
 
+// ——— Осознанность: запись дня → оценка состояния ———
+const SCALE = { type: 'integer', enum: [1, 2, 3, 4, 5] };
+const MOOD_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['score', 'mood', 'stress', 'energy', 'summary', 'triggers', 'helped', 'tip', 'crisis'],
+  properties: {
+    score: { ...SCALE, description: 'Общее ментальное состояние за день: 1 — очень плохо, 3 — нейтрально, 5 — отлично' },
+    mood: { type: 'string', description: 'Главная эмоция дня, 1–3 слова по-русски' },
+    stress: { ...SCALE, description: 'Уровень стресса и напряжения: 1 — спокойно, 5 — очень сильный' },
+    energy: { ...SCALE, description: 'Энергия и силы: 1 — истощение, 5 — бодрость' },
+    summary: { type: 'string', description: '2–3 предложения: что происходило и как человек это переживал' },
+    triggers: { type: 'array', items: { type: 'string' }, description: 'Что тревожило, злило или выматывало; коротко; пусто, если не было' },
+    helped: { type: 'array', items: { type: 'string' }, description: 'Что поддержало, порадовало, помогло; коротко; пусто, если не было' },
+    tip: { type: 'string', description: 'Один маленький конкретный шаг на завтра, по-дружески' },
+    crisis: { type: 'boolean', description: 'true, только если есть признаки острого кризиса: мысли о самоповреждении или суициде, безнадёжность' },
+  },
+};
+
+const MOOD_SYSTEM = `Ты помогаешь человеку вести дневник ментального состояния. Каждый вечер он надиктовывает голосом, как прошёл день; текст распознан речью, в нём бывают оговорки.
+Твоя задача — бережно и честно оценить состояние и коротко разобрать день, по-русски, на «ты».
+- Оценивай по тому, что сказано, не додумывай. Если текст короткий — оценивай по нему, без нравоучений.
+- Человек 32 лет, сидит на жёсткой диете (PSMF) и тренируется, бросает курить или сокращает: курит от нервов. Если в тексте есть сигареты, сон, еда, тренировки — учитывай их как факторы.
+- В контексте есть прошлые дни: если заметна динамика (лучше или хуже, повторяющийся триггер), упомяни это в summary одной фразой.
+- Совет на завтра — один, маленький и выполнимый, без банальностей вроде «больше отдыхай».
+- Ты не врач и не ставишь диагнозов. crisis=true — только при явных признаках острого кризиса; тогда в tip мягко предложи прямо сейчас написать или позвонить близкому человеку или специалисту, а при угрозе жизни — 112.`;
+
+async function analyzeMood(text, recent) {
+  client = client || new Anthropic({ timeout: 60_000 });
+  const context = recent.length
+    ? 'Прошлые дни (для динамики):\n' + recent.map((r) => `${r.date}: ${r.score}/5, ${r.mood}; ${r.summary}`).join('\n')
+    : 'Прошлых записей пока нет.';
+  const response = await client.beta.messages.create({
+    model: 'claude-opus-5-5',
+    max_tokens: 16000,
+    betas: ['server-side-fallback-2026-07-01'],
+    fallbacks: 'default',
+    output_config: { effort: 'low', format: { type: 'json_schema', schema: MOOD_SCHEMA } },
+    system: MOOD_SYSTEM,
+    messages: [{ role: 'user', content: `${context}\n\nЗапись сегодня:\n${text}` }],
+  });
+  if (response.stop_reason === 'refusal') throw new Error('Claude не стал разбирать эту запись');
+  if (response.stop_reason === 'max_tokens') throw new Error('Не получилось разобрать, попробуй ещё раз');
+  const block = response.content.find((b) => b.type === 'text');
+  if (!block) throw new Error('Пустой ответ, попробуй ещё раз');
+  const r = JSON.parse(block.text);
+  const n = (x) => Math.min(5, Math.max(1, Math.round(Number(x)) || 3));
+  const list = (a) => (Array.isArray(a) ? a.map((x) => String(x).slice(0, 120)).slice(0, 6) : []);
+  return {
+    score: n(r.score), stress: n(r.stress), energy: n(r.energy),
+    mood: String(r.mood || '').slice(0, 40), summary: String(r.summary || '').slice(0, 600),
+    triggers: list(r.triggers), helped: list(r.helped), tip: String(r.tip || '').slice(0, 300), crisis: Boolean(r.crisis),
+  };
+}
+
 // Понятный текст ошибки для пользователя
 function errorText(e) {
   if (e instanceof Anthropic.AuthenticationError) return 'ключ ANTHROPIC_API_KEY не подходит';
@@ -70,4 +125,4 @@ function errorText(e) {
   return e.message;
 }
 
-module.exports = { enabled, estimateFood, errorText };
+module.exports = { enabled, estimateFood, analyzeMood, errorText };

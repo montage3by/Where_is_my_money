@@ -21,6 +21,7 @@
     <button role="tab" data-tab="todo" aria-selected="true">Дела</button>
     <button role="tab" data-tab="gym">Тренировки</button>
     <button role="tab" data-tab="meals">PSMF</button>
+    <button role="tab" data-tab="mind">Осознанность</button>
     <button role="tab" data-tab="game">Игра</button>
   </nav>
 
@@ -86,6 +87,21 @@
       </div>
       <h3 class="cat"><span>Программа</span><span class="kcal">пн–пт, утром</span></h3>
       <div id="gym-program"></div>
+    </section>
+
+    <section id="tab-mind" class="panel" hidden>
+      <div class="card psmf-hero" id="mind-hero"></div>
+      <form class="card food-form" id="mind-form">
+        <textarea name="text" rows="5" maxlength="5000" placeholder="Как прошёл день? Что было, что бесило, что порадовало, сколько курил, как спал… Можно голосом — кнопка ниже или 🎤 на клавиатуре"></textarea>
+        <div class="food-row">
+          <button type="button" class="m-mic" id="mind-mic" hidden>🎤 Надиктовать</button>
+          <button type="submit">Сохранить и разобрать</button>
+        </div>
+      </form>
+      <div id="mind-today"></div>
+      <div id="mind-chart"></div>
+      <h3 class="cat">Прошлые дни</h3>
+      <div id="mind-history"></div>
     </section>
 
     <section id="tab-game" class="panel" hidden>
@@ -168,5 +184,6 @@
   <script src="app.js"></script>
   <script src="game.js"></script>
   <script src="gym.js"></script>
+  <script src="mind.js"></script>
 </body>
 </html>

@@ -59,10 +59,11 @@ function loadState() {
       settings: { city: DEFAULT_CITY, ...s.settings },
       food: s.food || {},
       workouts: s.workouts || {},
+      mind: s.mind || {},
       migrations: s.migrations || [],
     };
   } catch {
-    return { checks: {}, weights: [], counters: {}, snapshots: {}, routine: structuredClone(plan.routine), settings: { city: DEFAULT_CITY }, food: {}, workouts: {}, migrations: [] };
+    return { checks: {}, weights: [], counters: {}, snapshots: {}, routine: structuredClone(plan.routine), settings: { city: DEFAULT_CITY }, food: {}, workouts: {}, mind: {}, migrations: [] };
   }
 }
 
@@ -128,6 +129,13 @@ function cleanTask(input, existing) {
 }
 
 let state = loadState();
+
+// Последние разобранные записи до даты — Claude видит динамику
+function recentMind(date, n = 5) {
+  return Object.keys(state.mind || {}).filter((d) => d < date).sort().slice(-n)
+    .map((d) => { const a = [...state.mind[d]].reverse().find((x) => x.analysis); return a && { date: d, ...a.analysis }; })
+    .filter(Boolean);
+}
 
 // Правки живого списка дел из кода: каждая применяется один раз (id — в state.migrations).
 // Нужны, когда дела ставит Claude, а не через сайт.
@@ -222,6 +230,12 @@ const MIGRATIONS = [
       t.skip = t.skip.filter((d) => !psmfOff.includes(d));
       if (!t.skip.length) delete t.skip;
     }
+  }],
+  // Вечерняя запись в «Осознанность» — каждый день 20:00–22:00
+  ['2026-11-14-mind', (st) => {
+    if (st.routine.some((t) => t.id === 'mind')) return;
+    st.routine.push({ id: 'mind', start: '20:00', end: '22:00', title: 'Осознанность: запись дня', from: '2026-11-14',
+      details: 'Надиктуй во вкладке «Осознанность», как прошёл день и какое настроение. Отметится само после записи.' });
   }],
   ['2026-11-10-unrest', (st) => {
     const t = st.routine.find((x) => x.id === 'workout');
@@ -381,6 +395,7 @@ async function handleApi(req, res, route) {
       settings: { city: DEFAULT_CITY, ...(ok(body.settings, false) ? body.settings : {}) },
       food: ok(body.food, false) ? body.food : {},
       workouts: ok(body.workouts, false) ? body.workouts : {},
+      mind: ok(body.mind, false) ? body.mind : {},
       // Правки из кода, уже применённые в выгрузке, не применяются повторно
       migrations: [...new Set([...(Array.isArray(body.migrations) ? body.migrations : []), ...state.migrations])],
     };
@@ -424,6 +439,45 @@ async function handleApi(req, res, route) {
       console.error('ai:', e);
       return send(res, 502, { error: ai.errorText(e) });
     }
+  } else if (route === '/api/mind') {
+    // Осознанность: запись дня голосом/текстом → Claude оценивает состояние (1–5) и разбирает день
+    const date = String(body.date);
+    const text = String(body.text || '').trim().slice(0, 5000);
+    if (!DATE_RE.test(date) || !text) return send(res, 400, { error: 'Нужен текст записи' });
+    const entry = { id: crypto.randomBytes(4).toString('hex'), text, at: new Date().toISOString() };
+    let warning;
+    if (!ai.enabled()) warning = 'Запись сохранена без разбора: не настроен ANTHROPIC_API_KEY на Railway';
+    else {
+      try {
+        entry.analysis = await ai.analyzeMood(text, recentMind(date));
+      } catch (e) {
+        console.error('ai:', e);
+        warning = `Запись сохранена, разбор не получился: ${ai.errorText(e)}. Можно повторить позже`;
+      }
+    }
+    (state.mind[date] = state.mind[date] || []).push(entry);
+    // Дело «Осознанность» в «Делах» отмечается само
+    if (date === today() && state.routine.some((t) => t.id === 'mind')) {
+      snapshotDay(date);
+      state.checks[`todo:${date}:mind`] = state.checks[`todo:${date}:mind`] || new Date().toISOString();
+    }
+    saveState();
+    return send(res, 200, { ...state, warning });
+  } else if (route === '/api/mind/analyze') {
+    const entry = (state.mind[String(body.date)] || []).find((x) => x.id === body.id);
+    if (!entry) return send(res, 404, { error: 'Запись не найдена' });
+    if (!ai.enabled()) return send(res, 503, { error: 'Разбор не настроен: добавь ANTHROPIC_API_KEY в Variables на Railway' });
+    try {
+      entry.analysis = await ai.analyzeMood(entry.text, recentMind(String(body.date)));
+    } catch (e) {
+      console.error('ai:', e);
+      return send(res, 502, { error: ai.errorText(e) });
+    }
+  } else if (route === '/api/mind/delete') {
+    const list = state.mind[String(body.date)];
+    if (!list) return send(res, 404, { error: 'Запись не найдена' });
+    state.mind[body.date] = list.filter((x) => x.id !== body.id);
+    if (!state.mind[body.date].length) delete state.mind[body.date];
   } else if (route === '/api/food/delete') {
     const list = state.food[String(body.date)];
     if (!list) return send(res, 404, { error: 'Запись не найдена' });

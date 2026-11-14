@@ -560,6 +560,7 @@ function render() {
   renderWeights();
   if (typeof renderGame === 'function') renderGame();
   if (typeof renderGym === 'function') renderGym();
+  if (typeof renderMind === 'function') renderMind();
 }
 
 function showTab(name) {
